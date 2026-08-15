@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+/* Escaneá las clases de Tailwind de los componentes de packages/ui
+   (relativo a este arcivo: ../../../packages/ui/src). */
+@source "../../../packages/ui/src";
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: rgb(2 6 23);
+}

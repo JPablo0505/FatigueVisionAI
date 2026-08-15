@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+target/
+build/
+*.egg-info/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Models
+models/
+
+# Environment
+.env
+!.env.example
+
+# Local tooling state (not project source)
+.atl/
+.codegraph/
+.playwright-mcp/
+
+# Desktop / Tauri generated
+apps/desktop/src-tauri/gen/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/

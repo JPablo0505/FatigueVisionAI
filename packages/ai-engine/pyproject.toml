@@ -1,0 +1,23 @@
+[project]
+name = "fatiguevision-ai-engine"
+version = "0.1.0"
+description = "AI engine: contract and orchestration for fatigue scoring from high-level features."
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.8",
+    "mypy>=1.10",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

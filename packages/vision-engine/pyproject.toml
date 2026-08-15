@@ -1,0 +1,38 @@
+[project]
+name = "fatiguevision-vision-engine"
+version = "0.1.0"
+description = "Vision engine: pure synchronous camera, face detection and landmark contracts."
+requires-python = ">=3.12"
+dependencies = [
+    "mediapipe>=0.10.14",
+    "numpy>=2",
+    "opencv-python-headless>=4.10",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "mypy>=1.11",
+    "ruff>=0.6",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+
+[[tool.mypy.overrides]]
+module = "cv2"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "mediapipe",
+    "mediapipe.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

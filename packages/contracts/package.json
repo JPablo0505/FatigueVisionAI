@@ -1,0 +1,16 @@
+{
+  "name": "@fatiguevision/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Contratos de comunicación compartidos entre el backend (Python) y el frontend (TypeScript).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "devDependencies": {
+    "typescript": "~6.0.2"
+  }
+}

@@ -1,0 +1,1 @@
+"""Application services: thin coordination between routes and adapters."""

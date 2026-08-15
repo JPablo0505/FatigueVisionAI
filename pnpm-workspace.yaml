@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+  - packages/contracts
+  - packages/ui
+
+onlyBuiltDependencies:
+  - esbuild
+
+allowBuilds:
+  esbuild: true

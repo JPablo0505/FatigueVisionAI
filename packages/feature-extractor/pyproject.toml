@@ -1,0 +1,42 @@
+[project]
+name = "fatiguevision-feature-extractor"
+version = "0.1.0"
+description = "Feature extractor: biometric features computed from Vision Engine landmarks into AI Engine FatigueFeatures."
+requires-python = ">=3.12"
+dependencies = [
+    "fatiguevision-vision-engine",
+    "fatiguevision-ai-engine",
+]
+
+[tool.uv.sources]
+fatiguevision-vision-engine = { path = "../../packages/vision-engine" }
+fatiguevision-ai-engine = { path = "../../packages/ai-engine" }
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "mypy>=1.10",
+    "ruff>=0.8",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+
+# The engine packages ship without a py.typed marker. We treat them as
+# untyped at the boundary and cast at our call sites. Do NOT loosen strict
+# for feature_extractor code.
+[[tool.mypy.overrides]]
+module = [
+    "vision_engine",
+    "vision_engine.*",
+    "ai_engine",
+    "ai_engine.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

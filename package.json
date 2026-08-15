@@ -1,0 +1,13 @@
+{
+  "name": "fatiguevision-ai",
+  "private": true,
+  "scripts": {
+    "web:dev": "pnpm --filter @fatiguevision/web dev",
+    "web:build": "pnpm --filter @fatiguevision/web build",
+    "backend:dev": "uv run --project apps/backend uvicorn app.main:app --reload --port 8000",
+    "backend:test": "uv run --project apps/backend pytest",
+    "backend:lint": "uv run --project apps/backend ruff check app",
+    "backend:typecheck": "uv run --project apps/backend mypy app",
+    "desktop:dev": "pnpm --filter @fatiguevision/desktop tauri dev"
+  }
+}
