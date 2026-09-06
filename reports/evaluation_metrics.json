@@ -1,0 +1,189 @@
+{
+  "evaluation_timestamp": "2026-09-06T02:59:14.469881+00:00",
+  "model_path": "experiments\\20260906T025051Z\\model.joblib",
+  "test_data_path": "C:\\Users\\Pablo\\OneDrive\\Escritorio\\Trabajos\\Independiente\\FatigueVisionAI\\datasets\\processed\\yawdd_test.parquet",
+  "model_info": {
+    "classifier": "RandomForestClassifier",
+    "hyperparameters": {
+      "n_estimators": 100,
+      "max_depth": 10,
+      "min_samples_split": 5,
+      "min_samples_leaf": 2,
+      "class_weight": "balanced"
+    },
+    "feature_count": 20,
+    "class_labels": [
+      "high",
+      "low",
+      "medium"
+    ]
+  },
+  "data_info": {
+    "total_samples": 25,
+    "total_subjects": 8,
+    "class_distribution": {
+      "talking": "19",
+      "normal": "3",
+      "unknown": "2",
+      "yawning": "1"
+    }
+  },
+  "metrics": {
+    "overall": {
+      "accuracy": 1.0,
+      "precision_macro": 1.0,
+      "recall_macro": 1.0,
+      "f1_macro": 1.0,
+      "f1_weighted": 1.0,
+      "total_samples": 25
+    },
+    "per_class": {
+      "high": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 1
+      },
+      "low": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 22
+      },
+      "medium": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 2
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "high",
+        "low",
+        "medium"
+      ],
+      "matrix": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          22,
+          0
+        ],
+        [
+          0,
+          0,
+          2
+        ]
+      ],
+      "description": "Rows = true labels, Columns = predicted labels"
+    },
+    "classification_report": "              precision    recall  f1-score   support\n\n        high       1.00      1.00      1.00         1\n         low       1.00      1.00      1.00        22\n      medium       1.00      1.00      1.00         2\n\n    accuracy                           1.00        25\n   macro avg       1.00      1.00      1.00        25\nweighted avg       1.00      1.00      1.00        25\n"
+  },
+  "feature_importance": [
+    {
+      "feature": "head_pose_yaw_mean",
+      "importance": 0.1525,
+      "rank": 16
+    },
+    {
+      "feature": "yawn_max",
+      "importance": 0.1244,
+      "rank": 14
+    },
+    {
+      "feature": "yawn_mean",
+      "importance": 0.118,
+      "rank": 13
+    },
+    {
+      "feature": "iris_x_mean",
+      "importance": 0.1118,
+      "rank": 19
+    },
+    {
+      "feature": "blink_rate",
+      "importance": 0.1102,
+      "rank": 10
+    },
+    {
+      "feature": "mar_std",
+      "importance": 0.0988,
+      "rank": 6
+    },
+    {
+      "feature": "yawn_fraction",
+      "importance": 0.0919,
+      "rank": 15
+    },
+    {
+      "feature": "head_pose_pitch_mean",
+      "importance": 0.0758,
+      "rank": 17
+    },
+    {
+      "feature": "iris_y_mean",
+      "importance": 0.0255,
+      "rank": 20
+    },
+    {
+      "feature": "eye_closure_max",
+      "importance": 0.0157,
+      "rank": 12
+    },
+    {
+      "feature": "mar_max",
+      "importance": 0.0154,
+      "rank": 8
+    },
+    {
+      "feature": "mar_mean",
+      "importance": 0.0142,
+      "rank": 5
+    },
+    {
+      "feature": "eye_closure_mean",
+      "importance": 0.0109,
+      "rank": 11
+    },
+    {
+      "feature": "mar_min",
+      "importance": 0.0086,
+      "rank": 7
+    },
+    {
+      "feature": "ear_std",
+      "importance": 0.0078,
+      "rank": 2
+    },
+    {
+      "feature": "head_pose_roll_mean",
+      "importance": 0.0052,
+      "rank": 18
+    },
+    {
+      "feature": "ear_mean",
+      "importance": 0.0044,
+      "rank": 1
+    },
+    {
+      "feature": "ear_min",
+      "importance": 0.0044,
+      "rank": 3
+    },
+    {
+      "feature": "ear_max",
+      "importance": 0.0042,
+      "rank": 4
+    },
+    {
+      "feature": "perclos",
+      "importance": 0.0003,
+      "rank": 9
+    }
+  ]
+}

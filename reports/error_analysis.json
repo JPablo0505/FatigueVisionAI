@@ -1,0 +1,9 @@
+{
+  "model_path": "experiments\\20260906T025051Z\\model.joblib",
+  "test_data_path": "C:\\Users\\Pablo\\OneDrive\\Escritorio\\Trabajos\\Independiente\\FatigueVisionAI\\datasets\\processed\\yawdd_test.parquet",
+  "total_samples": 25,
+  "total_errors": 0,
+  "error_rate": 0.0,
+  "errors": [],
+  "confusion_pairs_summary": {}
+}
