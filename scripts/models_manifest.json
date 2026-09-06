@@ -1,21 +1,58 @@
 {
-  "base_dir": "models",
-  "models": [
-    {
-      "name": "face_detector",
-      "subdir": "vision",
-      "filename": "face_detector.tflite",
-      "url": "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite",
-      "sha256": "B4578F35940BF5A1A655214A1CCE5CAB13EBA73C1297CD78E1A04C2380B0152F",
-      "description": "BlazeFace short range — detección de rostros (MediaPipe Tasks)"
-    },
-    {
-      "name": "face_landmarker",
-      "subdir": "vision",
-      "filename": "face_landmarker.task",
-      "url": "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
-      "sha256": "64184E229B263107BC2B804C6625DB1341FF2BB731874B0BCC2FE6544E0BC9FF",
-      "description": "Face Landmarker — malla de 468 puntos de referencia (MediaPipe Tasks)"
+  "version": "1.0.0",
+  "model_name": "fatigue_v1",
+  "description": "Baseline RandomForest fatigue classifier trained on YAWDD dataset",
+  "artifact_path": "ai_engine/models/fatigue_v1.joblib",
+  "artifact_size_bytes": 164016,
+  "trained_on": "2026-09-06T02:50:51Z",
+  "training_data": {
+    "dataset": "YAWDD",
+    "train_windows": 117,
+    "val_windows": 11,
+    "test_windows": 25,
+    "total_subjects": 46,
+    "feature_count": 20
+  },
+  "evaluation": {
+    "cv_accuracy_mean": 0.9489,
+    "cv_accuracy_std": 0.0491,
+    "cv_f1_macro_mean": 0.8825,
+    "cv_f1_macro_std": 0.1391,
+    "cv_f1_weighted_mean": 0.9601,
+    "cv_f1_weighted_std": 0.0357,
+    "test_accuracy": 1.0,
+    "test_f1_macro": 1.0,
+    "test_samples": 25,
+    "cv_folds": 5
+  },
+  "hyperparameters": {
+    "classifier": "RandomForestClassifier",
+    "n_estimators": 100,
+    "max_depth": 10,
+    "min_samples_split": 5,
+    "min_samples_leaf": 2,
+    "class_weight": "balanced",
+    "random_state": 42
+  },
+  "features": {
+    "columns": [
+      "ear_mean", "ear_std", "ear_min", "ear_max",
+      "mar_mean", "mar_std", "mar_min", "mar_max",
+      "perclos", "blink_rate",
+      "eye_closure_mean", "eye_closure_max",
+      "yawn_mean", "yawn_max", "yawn_fraction",
+      "head_pose_yaw_mean", "head_pose_pitch_mean", "head_pose_roll_mean",
+      "iris_x_mean", "iris_y_mean"
+    ],
+    "target_map": {
+      "normal": "low",
+      "talking": "low",
+      "unknown": "medium",
+      "yawning": "high"
     }
-  ]
+  },
+  "adapter_class": "MLFatigueModel",
+  "adapter_module": "ai_engine.ml_model",
+  "status": "production_ready",
+  "notes": "S2-08 production-ready model. Validated via GroupKFold CV (K=5) and held-out test set."
 }

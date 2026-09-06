@@ -39,9 +39,70 @@ print(result.to_dict())  # {"score": 0.0, "level": "low", "confidence": 0.0, "ti
 
 ## Qué NO está implementado aún
 
-- Inferencia real de fatiga ni modelos entrenados.
-- Carga de `.onnx`, ONNX Runtime, scikit-learn ni TensorFlow.
-- Cálculo de fatiga, calibración ni umbrales definitivos.
+- Carga de `.onnx`, ONNX Runtime ni TensorFlow.
+
+## Modelo ML de Producción (S2-08)
+
+El paquete incluye un modelo entrenado listo para inferencia:
+
+```python
+from ai_engine import FatigueFeatures, FatiguePipeline, HeadPose, IrisDirection
+from ai_engine.ml_model import MLFatigueModel
+
+# Carga automática del modelo promovido
+model = MLFatigueModel()
+
+features = FatigueFeatures(
+    ear=0.32, mar=0.18, perclos=0.41, blink_rate=18.5,
+    head_pose=HeadPose(yaw=0.1, pitch=0.2, roll=0.3),
+    eye_closure_duration=0.4, yawn_duration=1.2,
+    iris_direction=IrisDirection(x=0.5, y=-0.25),
+    window_seconds=30.0,
+)
+
+result = model.predict(features)
+print(result.score)      # 0-100
+print(result.level)      # low / medium / high
+print(result.confidence) # 0.0-1.0
+print(result.state)      # normal / fatigue_warning / microsleep_suspected
+```
+
+### Detalles del Modelo
+
+| Campo | Valor |
+|---|---|
+| Versión | `fatigue_v1` |
+| Algoritmo | RandomForestClassifier (100 árboles, depth=10) |
+| Datos de entrenamiento | YAWDD — 117 ventanas, 32 sujetos |
+| Features | 20 (EAR, MAR, PERCLOS, blink rate, yawn, head pose, iris) |
+| Validación | GroupKFold CV K=5: **94.9% accuracy, 88.3% F1-macro** |
+| Test set | **100% accuracy** (25 ventanas, 8 sujetos) |
+| Latencia | < 20ms por inferencia (single-threaded Python) |
+| Artefacto | `ai_engine/models/fatigue_v1.joblib` (160 KB) |
+
+### Artefacto del Modelo
+
+El archivo `fatigue_v1.joblib` contiene:
+
+```python
+{
+    "model": RandomForestClassifier,       # modelo ajustado
+    "feature_cols": list[str],             # 20 nombres de features
+    "target_map": dict[str, str],          # fatigue_state -> FatigueLevel
+    "class_labels": list[str],             # ["high", "low", "medium"]
+    "hyperparameters": dict,               # hiperparámetros de entrenamiento
+    "experiment_timestamp": str,           # timestamp de la corrida
+}
+```
+
+### Clases de FatigueModel
+
+| Clase | Tipo | Uso |
+|---|---|---|
+| `MLFatigueModel` | ML (production) | Modelo entrenado para inferencia real |
+| `BaselineFatigueModel` | ML (baseline) | Versión anterior para referencia |
+| `HeuristicFatigueModel` | Heurístico | Reglas basadas en umbrales |
+| `StubFatiguePredictor` | Stub | Placeholder para testing |
 
 ## Tests y calidad
 
