@@ -1,0 +1,79 @@
+# ============================================================================
+# FatigueVisionAI — Training Pipeline Configuration (S2-06)
+# ============================================================================
+# All settings are overridable via CLI flags (see train_pipeline.py --help).
+# Run: python scripts/train_pipeline.py --config config/train_config.yaml
+# ============================================================================
+
+# -- Data paths ---------------------------------------------------------------
+data:
+  train_path: "datasets/processed/yawdd_train.parquet"
+  val_path: "datasets/processed/yawdd_val.parquet"
+  # Test set is held out for final evaluation only (never used in CV)
+  test_path: "datasets/processed/yawdd_test.parquet"
+
+# -- Feature columns (20 numeric features from S2-03 windowing) ---------------
+features:
+  columns:
+    - ear_mean
+    - ear_std
+    - ear_min
+    - ear_max
+    - mar_mean
+    - mar_std
+    - mar_min
+    - mar_max
+    - perclos
+    - blink_rate
+    - eye_closure_mean
+    - eye_closure_max
+    - yawn_mean
+    - yawn_max
+    - yawn_fraction
+    - head_pose_yaw_mean
+    - head_pose_pitch_mean
+    - head_pose_roll_mean
+    - iris_x_mean
+    - iris_y_mean
+
+  # Target mapping: YAWDD fatigue_state -> FatigueLevel
+  target_map:
+    normal: "low"
+    talking: "low"
+    unknown: "medium"
+    yawning: "high"
+
+  # Column containing the subject identifier for grouped splitting
+  group_column: "subject_id"
+
+# -- Model hyperparameters ----------------------------------------------------
+model:
+  classifier: "RandomForestClassifier"
+  params:
+    n_estimators: 100
+    max_depth: 10
+    min_samples_split: 5
+    min_samples_leaf: 2
+    class_weight: "balanced"
+  random_state: 42
+
+# -- Evaluation strategy -------------------------------------------------------
+evaluation:
+  # "group_kfold" for GroupKFold CV (recommended), "holdout" for train/val split
+  strategy: "group_kfold"
+  group_kfold:
+    n_splits: 5
+  # Whether to also evaluate on the held-out validation set after CV
+  eval_holdout_val: true
+  # Whether to evaluate on the held-out test set after CV
+  eval_holdout_test: true
+
+# -- Experiment tracking -------------------------------------------------------
+experiments:
+  # Root directory for experiment runs
+  base_dir: "experiments"
+  # Each run creates: <base_dir>/<timestamp>/ with config.json, metrics.json, model.joblib
+  # Latest run is also symlinked to <base_dir>/latest/
+  save_model: true
+  save_config: true
+  save_metrics: true
