@@ -9,6 +9,9 @@ dependencies = [
     "fatiguevision-ai-engine",
     "fatiguevision-feature-extractor",
     "pydantic-settings>=2.4",
+    "scikit-learn>=1.5",
+    "joblib>=1.3",
+    "numpy>=1.24",
 ]
 
 [tool.uv.sources]

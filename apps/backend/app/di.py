@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import cast
 
-from ai_engine import HeuristicFatigueModel
 from fastapi import FastAPI
 from feature_extractor import FeatureExtractor
 
@@ -20,6 +20,8 @@ from app.services.assessment import AssessmentService
 from app.services.streaming import StreamingManager
 
 APP_NAME = os.getenv("APP_NAME", "FatigueVision AI")
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -36,16 +38,43 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
         await manager.shutdown()
 
 
+def _build_fatigue_model(settings: Settings):
+    """Instantiate the fatigue model based on the feature flag.
+
+    ``"ml"``        → ``MLFatigueModel`` (trained RandomForest, fatigue_v2.joblib)
+    ``"heuristic"`` → ``HeuristicFatigueModel`` (rule-based, S1-17)
+
+    The ``FatigueModel`` port is shared: both implementations produce a
+    ``FatigueResult`` with the same contract, so the rest of the pipeline
+    is untouched.
+    """
+    model_type = settings.fatigue_model_type
+
+    if model_type == "ml":
+        from ai_engine.ml_model import MLFatigueModel
+
+        logger.info("Fatigue model: ML (fatigue_v2.joblib)")
+        return MLFatigueModel()
+
+    if model_type == "heuristic":
+        from ai_engine import HeuristicFatigueModel
+
+        logger.info("Fatigue model: Heuristic (rule-based)")
+        return HeuristicFatigueModel()
+
+    raise ValueError(
+        f"Unknown FATIGUE_MODEL_TYPE={model_type!r}. "
+        "Expected 'ml' or 'heuristic'."
+    )
+
+
 def build_adapters(settings: Settings) -> tuple[VisionAdapter, AIAdapter]:
     """Build the production adapters from the given settings.
 
-    Production uses the ``HeuristicFatigueModel`` predictor (S1-17): the real
-    fatigue/risk evaluation. The ``StubFatiguePredictor`` remains the
-    ``AIAdapter`` DEFAULT so tests and scripts that build an ``AIAdapter()``
-    with no arguments keep the deterministic stub — the heuristic is wired
-    ONLY here, at the composition root.
+    The fatigue model is selected by ``Settings.fatigue_model_type``
+    (env var ``FATIGUE_MODEL_TYPE``). Default is ``"ml"`` (S3-01).
     """
-    return VisionAdapter(settings), AIAdapter(predictor=HeuristicFatigueModel())
+    return VisionAdapter(settings), AIAdapter(predictor=_build_fatigue_model(settings))
 
 
 def build_extractor(settings: Settings) -> FeatureExtractor:

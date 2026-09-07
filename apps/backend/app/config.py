@@ -28,3 +28,8 @@ class Settings(BaseSettings):
     model_dir: Path = DEFAULT_MODEL_DIR
     face_detector_model: Path = DEFAULT_MODEL_DIR / "face_detector.tflite"
     face_landmarker_model: Path = DEFAULT_MODEL_DIR / "face_landmarker.task"
+
+    # Fatigue model selector (S3-01 feature flag).
+    # "ml"        → MLFatigueModel (trained RandomForest, fatigue_v2.joblib)
+    # "heuristic" → HeuristicFatigueModel (rule-based, S1-17)
+    fatigue_model_type: Literal["ml", "heuristic"] = "ml"
