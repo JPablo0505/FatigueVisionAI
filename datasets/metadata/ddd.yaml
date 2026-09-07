@@ -1,0 +1,81 @@
+# DDD (Driver Drowsiness Dataset) descriptor
+# Source: Kaggle "Driver Drowsiness Dataset (DDD)"
+# Structure: Two-class image dataset (Drowsy vs Non Drowsy)
+
+name: ddd
+version: "1.0"
+description: >
+  DDD: Driver Drowsiness Dataset. Contains 41,793 PNG face images
+  of drivers in two states: Drowsy (22,348) and Non Drowsy (19,445).
+  Images are 227x227 RGB, captured from in-car monitoring cameras.
+  Subject IDs are encoded in filename prefixes (uppercase = drowsy,
+  lowercase = non-drowsy). Each letter prefix represents a different
+  subject, with numbering gaps indicating temporal subsampling.
+
+license: "Academic / research use only (Kaggle dataset terms)"
+citation: >
+  DDD: Driver Drowsiness Dataset. Available on Kaggle.
+  https://www.kaggle.com/datasets/...
+
+structure:
+  root: "datasets/raw/Driver Drowsiness Dataset (DDD)"
+  classes:
+    Drowsy:
+      prefix_case: uppercase
+      count: 22348
+      description: "Frames from drowsy driving sessions"
+    Non Drowsy:
+      prefix_case: lowercase
+      count: 19445
+      description: "Frames from alert driving sessions"
+  image_format: "PNG, 227x227, RGB"
+  naming_convention: >
+    {letter}{number}.png — the letter prefix identifies the subject
+    (A-Z for drowsy, a-z for non-drowsy). The number is a frame
+    index within that subject's session.
+
+subjects:
+  total: 49  # 26 drowsy (A-Z) + 23 non-drowsy (a-z, missing f/t)
+  drowsy_prefixes: [A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z]
+  non_drowsy_prefixes: [a,b,c,d,e,g,h,i,j,k,l,m,n,o,p,q,r,s,u,v,w,x,y,z]
+
+annotation_schema:
+  fatigue_level:
+    type: categorical
+    values: [drowsy, non_drowsy]
+    description: "Binary drowsiness label from directory membership"
+  subject_id:
+    type: string
+    description: "Letter prefix encoding the subject identity"
+
+label_vocabulary:
+  fatigue_level: [drowsy, non_drowsy]
+
+# Feature extraction notes
+# Each image is processed independently through MediaPipe face detection
+# and mesh estimation. No temporal continuity between frames.
+# FeatureExtractor produces 20-dimensional vectors per frame.
+feature_extraction:
+  method: "MediaPipe face detection + mesh estimation per image"
+  features_per_frame: 20
+  feature_columns:
+    - ear_mean
+    - ear_std
+    - ear_min
+    - ear_max
+    - mar_mean
+    - mar_std
+    - mar_min
+    - mar_max
+    - perclos
+    - blink_rate
+    - eye_closure_mean
+    - eye_closure_max
+    - yawn_mean
+    - yawn_max
+    - yawn_fraction
+    - head_pose_yaw_mean
+    - head_pose_pitch_mean
+    - head_pose_roll_mean
+    - iris_x_mean
+    - iris_y_mean
