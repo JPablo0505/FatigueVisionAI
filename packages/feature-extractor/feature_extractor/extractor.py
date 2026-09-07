@@ -30,7 +30,7 @@ from feature_extractor.window import (
 class FeatureExtractorConfig:
     """Configuration of a ``FeatureExtractor`` instance."""
 
-    window_seconds: float = 30.0
+    window_seconds: float = 5.0
     ear_closed_threshold: float = 0.25
     mar_yawn_threshold: float = 0.5
 
@@ -51,7 +51,7 @@ class FeatureExtractor:
     """
 
     def __init__(self, config: FeatureExtractorConfig | None = None) -> None:
-        """Build an extractor; the default config uses a 30-second window."""
+        """Build an extractor; the default config uses a 5-second window."""
         self._config = config if config is not None else FeatureExtractorConfig()
         self._window = FeatureWindow(
             WindowConfig(
@@ -84,9 +84,16 @@ class FeatureExtractor:
 
         iris_x, iris_y = iris_direction_for(mesh)
         yaw, pitch, roll = head_pose_for(mesh)
+        # Clamp EAR and MAR to [0, 1] to prevent InvalidFeaturesError from
+        # distorted MediaPipe landmarks that push ratios above the logical
+        # ceiling (S2-03 debt fix).
+        raw_ear = ear_for(mesh)
+        raw_mar = mar_for(mesh)
+        ear_clamped = max(0.0, min(raw_ear, 1.0))
+        mar_clamped = max(0.0, min(raw_mar, 1.0))
         measurements = FrameMeasurements(
-            ear=ear_for(mesh),
-            mar=mar_for(mesh),
+            ear=ear_clamped,
+            mar=mar_clamped,
             iris_x=iris_x,
             iris_y=iris_y,
             yaw=yaw,

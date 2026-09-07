@@ -91,7 +91,7 @@ def test_largest_face_selected() -> None:
 
 
 def test_window_seconds_exposed() -> None:
-    assert FeatureExtractor().window_seconds == 30.0
+    assert FeatureExtractor().window_seconds == 5.0
     custom = FeatureExtractor(FeatureExtractorConfig(window_seconds=15.0))
     assert custom.window_seconds == 15.0
 

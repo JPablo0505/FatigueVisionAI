@@ -87,7 +87,7 @@ def _mean(values: list[float]) -> float:
 class WindowConfig:
     """Configuration of a sliding time window."""
 
-    window_seconds: float = 30.0
+    window_seconds: float = 5.0
     ear_closed_threshold: float = 0.25
     mar_yawn_threshold: float = 0.5
 

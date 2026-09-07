@@ -82,10 +82,10 @@ def test_heuristic_implements_fatigue_model_port(model: HeuristicFatigueModel) -
         (0.30, RiskState.long_blink),
         (0.49, RiskState.long_blink),
         (0.50, RiskState.long_blink),  # boundary: still a long blink uncorroborated
-        (0.99, RiskState.long_blink),
-        (1.00, RiskState.fatigue_warning),  # uncorroborated >= 1.0 drops a level
-        (1.99, RiskState.fatigue_warning),
-        (2.00, RiskState.critical_microsleep),  # unambiguous
+        (0.79, RiskState.long_blink),
+        (0.80, RiskState.fatigue_warning),  # S3-03: lowered from 1.0
+        (1.49, RiskState.fatigue_warning),
+        (1.50, RiskState.critical_microsleep),  # S3-03: lowered from 2.0
         (2.50, RiskState.critical_microsleep),
     ],
 )
@@ -109,7 +109,7 @@ def test_historical_closure_boundary_0_30_is_long_blink(
     assert exactly.state is RiskState.long_blink
 
 
-def test_historical_closure_boundary_1_00_requires_corroboration(
+def test_historical_closure_boundary_0_80_requires_corroboration(
     model: HeuristicFatigueModel,
 ) -> None:
     uncorroborated = model.predict(
@@ -198,11 +198,11 @@ def test_long_blink_corroborated_escalates_to_fatigue_warning(
 @pytest.mark.parametrize(
     ("current", "expected"),
     [
-        (0.99, RiskState.normal),  # below the active threshold -> clean history
-        (1.00, RiskState.microsleep_suspected),
-        (1.50, RiskState.microsleep_suspected),
-        (1.99, RiskState.microsleep_suspected),
-        (2.00, RiskState.critical_microsleep),
+        (0.79, RiskState.normal),  # below the active threshold -> clean history
+        (0.80, RiskState.microsleep_suspected),  # S3-03: lowered from 1.0
+        (1.20, RiskState.microsleep_suspected),
+        (1.49, RiskState.microsleep_suspected),
+        (1.50, RiskState.critical_microsleep),  # S3-03: lowered from 2.0
         (2.50, RiskState.critical_microsleep),
     ],
 )
@@ -219,7 +219,7 @@ def test_active_closure_overrides_clean_history(
 ) -> None:
     result = model.predict(
         make_features(
-            current_eye_closure_duration=1.4,
+            current_eye_closure_duration=1.0,
             longest_eye_closure_duration=0.2,  # clean history
             perclos=0.0,
             blink_rate=20.0,

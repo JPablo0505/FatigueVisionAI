@@ -201,17 +201,28 @@ class MLFatigueModel:
     ) -> float:
         """Compute a probability-weighted score in [0, 100].
 
-        Instead of a flat score per level, this interpolates within the
-        level's score range based on the probability distribution. This
-        gives finer granularity — e.g., a confident 'high' gets 95, while
-        an uncertain 'high' gets 70.
+        Non-linear calibration (S3-03): high-confidence "high" predictions
+        get an aggressive score boost to trigger faster microsleep alerts.
+        The old linear interpolation is replaced with a piecewise function
+        that penalizes fatigue states more aggressively.
         """
         low_bound, high_bound = _SCORE_RANGES.get(predicted_label, (33.0, 66.0))
         prob = float(np.max(probabilities))
 
-        # Interpolate within the range based on confidence
-        # Higher confidence → closer to the top of the range
-        score = low_bound + (high_bound - low_bound) * prob
+        # Non-linear boost for high-confidence fatigue predictions (S3-03)
+        if predicted_label == "high" and prob >= 0.7:
+            # Aggressive: 0.7→82, 0.85→91, 1.0→98
+            score = 66.0 + (100.0 - 66.0) * ((prob - 0.7) / 0.3) ** 0.6
+        elif predicted_label == "high":
+            # Linear within high range for lower confidence
+            score = low_bound + (high_bound - low_bound) * prob
+        elif predicted_label == "medium" and prob >= 0.8:
+            # Medium with high confidence: push toward upper band
+            score = 33.0 + (66.0 - 33.0) * (prob ** 0.8)
+        else:
+            # Standard linear interpolation
+            score = low_bound + (high_bound - low_bound) * prob
+
         return round(min(100.0, max(0.0, score)), 2)
 
     def _prediction_to_level(self, prediction: str) -> FatigueLevel:

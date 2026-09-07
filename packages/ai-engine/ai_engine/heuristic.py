@@ -51,16 +51,15 @@ NORMAL_BLINK_MAX_S = 0.30
 LONG_BLINK_MAX_S = 0.50
 """Upper bound of a long blink; > 500 ms is a drowsiness marker."""
 
-FATIGUE_CLOSURE_MAX_S = 1.00
-"""Closure duration that already warrants a fatigue warning."""
+FATIGUE_CLOSURE_MAX_S = 0.80
+"""Closure duration that already warrants a fatigue warning (S3-03: lowered from 1.0s)."""
 
-CRITICAL_MICROSLEEP_MIN_S = 2.00
-"""Closure duration treated as an unambiguous critical microsleep.
+CRITICAL_MICROSLEEP_MIN_S = 1.50
+"""Closure duration treated as an unambiguous critical microsleep (S3-03: lowered from 2.0s).
 
-Future Euro NCAP escalon: ``SLEEP_MIN_S = 3.00`` (eye closure > 3 s counts as
-``sleep`` per Euro NCAP DSM). NOT implemented yet: without a trained model the
-dashboard escalates to ``critical_microsleep`` at 2.0 s and keeps the Euro
-NCAP sleep bucket as documented follow-up.
+Euro NCAP DSM 2023 defines microsleep as eye closure < 3s. We alert at
+1.5s (active) to give the driver time to react; 2.0s was too slow for
+real-time detection with a 5-second feature window.
 """
 
 # -- corroboration thresholds --------------------------------------------------
