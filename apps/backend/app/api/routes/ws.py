@@ -110,6 +110,9 @@ async def ws_endpoint(websocket: WebSocket) -> None:
             await manager.handle_client_message(subscriber, message)
     except WebSocketDisconnect:
         pass
+    except Exception:  # noqa: BLE001 — unexpected error: close cleanly (S3-02)
+        with suppress(Exception):
+            await websocket.close(code=1011, reason="internal error")
     finally:
         send_task.cancel()
         with suppress(asyncio.CancelledError):

@@ -8,10 +8,9 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': 'http://127.0.0.1:8000',
-      '/ws': {
-        target: 'ws://127.0.0.1:8000',
-        ws: true,
-      },
+      // /ws proxy REMOVED (S3-02): el frontend conecta directamente al
+      // backend via VITE_WS_URL o ws://localhost:8000/ws, evitando el
+      // ECONNABORTED del proxy de Vite por alto volumen de frames.
     },
   },
 })

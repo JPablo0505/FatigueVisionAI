@@ -87,11 +87,17 @@ export function useFatigueStream(): FatigueStream {
       }
     }
 
-    // Conexión en ruta RELATIVA: /ws => el proxy de Vite la canaliza al backend.
+    // Conexión directa al backend (S3-02): bypass Vite proxy para evitar
+    // ECONNABORTED por alto volumen de frames.  VITE_WS_URL permite
+    // override completo; sin ella, se construye la URL absoluta apuntando
+    // al mismo host en el puerto del backend (8000).
     const connect = () => {
       if (disposed) return
       setConnectionState('connecting')
-      const ws = new WebSocket(WS_PATH)
+      const wsUrl =
+        import.meta.env.VITE_WS_URL ||
+        `ws://${window.location.hostname}:8000${WS_PATH}`
+      const ws = new WebSocket(wsUrl)
       socketRef.current = ws
 
       ws.onopen = () => {
