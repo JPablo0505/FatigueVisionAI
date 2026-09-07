@@ -1,6 +1,6 @@
 """Production ML fatigue model adapter (S2-08).
 
-Loads the promoted ``fatigue_v1.joblib`` artifact and implements the
+Loads the promoted ``fatigue_v2.joblib`` artifact and implements the
 ``FatigueModel`` protocol for real-time inference.
 
 Key improvements over ``BaselineFatigueModel``:
@@ -13,7 +13,7 @@ Usage::
 
     from ai_engine.ml_model import MLFatigueModel
 
-    model = MLFatigueModel()  # loads fatigue_v1 by default
+    model = MLFatigueModel()  # loads fatigue_v2 by default
     result = model.predict(features)
 """
 
@@ -39,7 +39,7 @@ from ai_engine.types import (
 # Default artifact path (promoted production model)
 # ---------------------------------------------------------------------------
 _MODELS_DIR = Path(__file__).resolve().parent / "models"
-_DEFAULT_ARTIFACT = _MODELS_DIR / "fatigue_v1.joblib"
+_DEFAULT_ARTIFACT = _MODELS_DIR / "fatigue_v2.joblib"
 
 # ---------------------------------------------------------------------------
 # Score mapping constants
@@ -70,7 +70,7 @@ class MLFatigueModel:
     """Production-ready ML fatigue classifier.
 
     Implements the ``FatigueModel`` protocol by:
-    1. Loading the promoted ``fatigue_v1.joblib`` artifact at construction.
+    1. Loading the promoted ``fatigue_v2.joblib`` artifact at construction.
     2. Converting ``FatigueFeatures`` → 20-dimensional feature vector.
     3. Running ``predict`` + ``predict_proba`` → ``FatigueResult``.
     4. Injecting a timestamp on every prediction.
@@ -88,7 +88,7 @@ class MLFatigueModel:
         ----------
         artifact_path : str or Path, optional
             Path to the ``.joblib`` artifact. Defaults to the promoted
-            ``fatigue_v1.joblib`` in ``ai_engine/models/``.
+            ``fatigue_v2.joblib`` in ``ai_engine/models/``.
 
         Raises
         ------
@@ -109,7 +109,7 @@ class MLFatigueModel:
     @property
     def version(self) -> str:
         """Return the model version identifier."""
-        return "fatigue_v1"
+        return "fatigue_v2"
 
     @property
     def feature_count(self) -> int:

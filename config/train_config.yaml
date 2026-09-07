@@ -7,10 +7,10 @@
 
 # -- Data paths ---------------------------------------------------------------
 data:
-  train_path: "datasets/processed/yawdd_train.parquet"
-  val_path: "datasets/processed/yawdd_val.parquet"
+  train_path: "datasets/processed/fused_train.parquet"
+  val_path: "datasets/processed/fused_val.parquet"
   # Test set is held out for final evaluation only (never used in CV)
-  test_path: "datasets/processed/yawdd_test.parquet"
+  test_path: "datasets/processed/fused_test.parquet"
 
 # -- Feature columns (20 numeric features from S2-03 windowing) ---------------
 features:
