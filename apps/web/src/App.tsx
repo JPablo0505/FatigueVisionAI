@@ -282,7 +282,7 @@ function App() {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-ebony-clay-900 px-6 py-4">
           <div className="flex items-center gap-3">
-            <FatigueLogo className="h-9 w-9" />
+            <FatigueLogo className="h-12 w-12" />
             <div>
               <h1 className="text-2xl font-semibold text-ebony-clay-50">FatigueVision AI</h1>
               <p className="mt-0.5 text-sm text-ebony-clay-400">{t('subtitle')}</p>
