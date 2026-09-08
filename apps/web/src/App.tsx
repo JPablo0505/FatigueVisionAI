@@ -23,6 +23,8 @@ import { Panel } from './components/Panel'
 import { MetricRow } from './components/MetricRow'
 import { MetricCell } from './components/MetricCell'
 import { FatigueLogo } from './components/FatigueLogo'
+import { SettingsPanel, readAlertVolume } from './components/SettingsPanel'
+import { alertSound } from './lib/alertSound'
 import { formatTemplate, useLanguage } from './i18n'
 import type { Lang, TranslationKey } from './i18n'
 import { useFatigueAlert } from './hooks/useFatigueAlert'
@@ -201,12 +203,21 @@ function App() {
   const [soundEnabled, setSoundEnabled] = useState<boolean>(readSoundEnabled)
   const { alert, dismiss } = useFatigueAlert(assessment, soundEnabled)
 
+  // S4-02: Settings panel & alarm volume
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [volume, setVolume] = useState(readAlertVolume)
+
   // S4-01: Flash visual rojo cuando el estado es critical_microsleep
   const isCritical = assessment?.state === 'critical_microsleep'
 
   useEffect(() => {
     window.localStorage.setItem(SOUND_STORAGE_KEY, soundEnabled ? '1' : '0')
   }, [soundEnabled])
+
+  // S4-02: Sync volume to the sound engine
+  useEffect(() => {
+    alertSound.setVolume(volume)
+  }, [volume])
 
   const connected = connectionState === 'open'
   const isRunning = visionStatus?.pipeline === 'running'
@@ -273,6 +284,17 @@ function App() {
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <LanguageSelector />
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              aria-label={t('settingsTitle')}
+              className="rounded-lg border border-ebony-clay-800 bg-ebony-clay-900 p-2 text-ebony-clay-400 hover:bg-ebony-clay-800 hover:text-ebony-clay-200"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
             <Badge tone="info" ariaLabel={t('protocolBadge')}>
               {formatTemplate(t('protocolText'), { v: PROTOCOL_VERSION })}
             </Badge>
@@ -373,6 +395,16 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* S4-02: Settings drawer */}
+      <SettingsPanel
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        volume={volume}
+        onVolumeChange={setVolume}
+        options={overlayOptions}
+        onOptionsChange={setOverlayOptions}
+      />
     </div>
   )
 }
@@ -503,10 +535,9 @@ interface BiometricsPanelProps {
 }
 
 function BiometricsPanel({ assessment }: BiometricsPanelProps) {
-  const { lang, t } = useLanguage()
+  const { t } = useLanguage()
   const features = assessment?.features
-  const es = lang === 'es'
-  const desc = (key: TranslationKey) => (es ? t(key) : undefined)
+  const desc = (key: TranslationKey) => t(key)
   return (
     <Panel title={t('biometricsTitle')}>
       {assessment === null ? (

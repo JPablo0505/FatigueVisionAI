@@ -70,6 +70,7 @@ const RELEASE_SECONDS = 0.02
 const LEAD_SECONDS = 0.02
 
 let enabled = true
+let volumePercent = 80
 let context: AudioContext | null = null
 let activeHandle: AlertSoundHandle | null = null
 
@@ -110,7 +111,7 @@ function stopActive(): void {
 /** Programa los tonos del patrón y devuelve un handle para cortarlos antes. */
 function scheduleCycle(ctx: AudioContext, pattern: SoundPattern): AlertSoundHandle {
   const master = ctx.createGain()
-  master.gain.value = 1
+  master.gain.value = volumePercent / 100
   master.connect(ctx.destination)
   const scheduled: Array<{ osc: OscillatorNode; gain: GainNode }> = []
 
@@ -171,6 +172,11 @@ export const alertSound = {
       const ctx = ensureContext()
       if (ctx !== null) resumeContext()
     }
+  },
+
+  /** Ajusta el volumen maestro (0–100). */
+  setVolume(percent: number): void {
+    volumePercent = Math.max(0, Math.min(100, percent))
   },
 
   /**
