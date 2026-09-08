@@ -6,6 +6,7 @@ reports a clean pipeline error instead of crashing the process at startup.
 
 from __future__ import annotations
 
+import logging
 from typing import cast
 
 from vision_engine.camera import CameraSettings, create_camera_source
@@ -17,6 +18,8 @@ from vision_engine.types import Frame, VisionEvent
 
 from app.adapters.browser_camera import BrowserFrameSource
 from app.config import Settings
+
+logger = logging.getLogger(__name__)
 
 
 class VisionAdapter:
@@ -148,9 +151,15 @@ class VisionAdapter:
         """
         self._ensure_resources()
         if self._build_error is not None or self._camera is None:
+            logger.warning("submit_frame dropped: build_error=%s", self._build_error)
             return False
         submitter = getattr(self._camera, "submit", None)
         if submitter is None:
+            logger.warning(
+                "submit_frame dropped: camera source %s has no submit() — "
+                "is CAMERA_SOURCE=browser?",
+                type(self._camera).__name__,
+            )
             return False
         return cast(bool, submitter(frame))
 

@@ -16,7 +16,9 @@ errored pipeline is retried on a simple 1 s backoff.
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
+import traceback
 from contextlib import suppress
 
 from ai_engine.errors import InferenceError
@@ -42,6 +44,8 @@ from app.protocol import (
     serialize,
 )
 from app.services.assessment import AssessmentService
+
+logger = logging.getLogger(__name__)
 
 STATUS_INTERVAL_S = 1.0
 RETRY_BACKOFF_S = 1.0
@@ -337,8 +341,18 @@ class StreamingManager:
         blocked. The loop drains automatically when a failure moves the state
         to ``error``.
         """
+        frame_count = 0
         while self._state == "running":
             response, event = await self._process_one_frame()
+            frame_count += 1
+            if frame_count <= 3 or frame_count % 30 == 0:
+                face_count = len(event.detections) if event else 0
+                has_features = response is not None and response.status == "ok"
+                logger.info(
+                    "Frame #%d: faces=%d features=%s status=%s",
+                    frame_count, face_count, has_features,
+                    response.status if response else "none",
+                )
             if response is not None:
                 # A healthy frame closes the current error episode, so a LATER
                 # failure re-emits the ``error`` envelope.
@@ -351,15 +365,19 @@ class StreamingManager:
         try:
             return await asyncio.to_thread(self._process_frame_sync)
         except CameraNotAvailableError as exc:
+            logger.warning("Camera not available: %s", exc)
             await self._fail(ERROR_CAMERA_UNAVAILABLE, f"Cámara no disponible: {exc}")
             return None, None
         except ProcessingError as exc:
+            logger.error("Vision pipeline error:\n%s", traceback.format_exc())
             await self._fail(ERROR_PIPELINE, f"Error del pipeline de visión: {exc}")
             return None, None
         except InferenceError as exc:
+            logger.error("Inference error:\n%s", traceback.format_exc())
             await self._fail(ERROR_INFERENCE, f"Error de inferencia de fatiga: {exc}")
             return None, None
         except Exception as exc:  # noqa: BLE001 - keep the state machine consistent
+            logger.error("Unexpected frame processing error:\n%s", traceback.format_exc())
             await self._fail(ERROR_PIPELINE, f"Error procesando el frame: {exc}")
             return None, None
 
@@ -470,6 +488,7 @@ class StreamingManager:
         self._state_error = message
         self._retry_after = time.monotonic() + RETRY_BACKOFF_S
         if first_failure:
+            logger.error("Pipeline error [%s]: %s", code, message)
             await self._broadcast(
                 build_envelope(MessageKind.ERROR, {"code": code, "message": message})
             )

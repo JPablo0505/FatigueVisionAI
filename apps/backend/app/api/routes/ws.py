@@ -12,7 +12,9 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import logging
 import time
+import traceback
 from contextlib import suppress
 from typing import cast
 
@@ -33,6 +35,7 @@ from app.protocol import (
 from app.services.streaming import StreamingManager, Subscriber
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def _get_manager(websocket: WebSocket) -> StreamingManager:
@@ -58,6 +61,7 @@ def _submit_frame_provide(
         arr = np.frombuffer(jpeg, dtype=np.uint8)
         bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
     if bgr is None:
+        logger.warning("Frame decode failed (jpegBase64 invalid)")
         manager.deliver(
             subscriber,
             build_envelope(
@@ -69,7 +73,9 @@ def _submit_frame_provide(
             ),
         )
         return
-    manager.submit_frame(Frame(data=bgr, timestamp_ns=time.time_ns()))
+    ok = manager.submit_frame(Frame(data=bgr, timestamp_ns=time.time_ns()))
+    if not ok:
+        logger.warning("Frame submitted but dropped by camera source")
 
 
 async def _sender_loop(websocket: WebSocket, subscriber: Subscriber) -> None:
@@ -79,6 +85,7 @@ async def _sender_loop(websocket: WebSocket, subscriber: Subscriber) -> None:
             payload = await subscriber.queue.get()
             await websocket.send_text(payload)
     except Exception:  # noqa: BLE001 - broken socket: flag it dead and stop
+        logger.debug("Sender loop exit (socket broken or cancelled)")
         subscriber.mark_dead()
         return
 
@@ -109,8 +116,9 @@ async def ws_endpoint(websocket: WebSocket) -> None:
                 continue
             await manager.handle_client_message(subscriber, message)
     except WebSocketDisconnect:
-        pass
+        logger.info("WebSocket client disconnected normally")
     except Exception:  # noqa: BLE001 — unexpected error: close cleanly (S3-02)
+        logger.error("Unhandled exception in WS endpoint:\n%s", traceback.format_exc())
         with suppress(Exception):
             await websocket.close(code=1011, reason="internal error")
     finally:

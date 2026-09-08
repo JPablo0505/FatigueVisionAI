@@ -18,6 +18,12 @@ __pycache__/
 # Models
 models/
 
+# Datasets (large binary data — metadata stays in git)
+datasets/raw/*
+datasets/processed/*
+!datasets/raw/.gitkeep
+!datasets/processed/.gitkeep
+
 # Environment
 .env
 !.env.example
