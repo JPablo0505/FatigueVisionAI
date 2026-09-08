@@ -61,15 +61,6 @@ interface SettingsPanelProps {
   onOptionsChange: (o: OverlayOptions) => void
 }
 
-/* ---------- cooldown config (matches useRiskCooldown) ---------- */
-const COOLDOWN_SECONDS: Record<string, number> = {
-  normal: 0,
-  long_blink: 3,
-  fatigue_warning: 5,
-  microsleep_suspected: 10,
-  critical_microsleep: 15,
-}
-
 /* ---------- component ---------- */
 export function SettingsPanel({
   open,
@@ -239,26 +230,6 @@ export function SettingsPanel({
               />
               <span className="text-xs text-ebony-clay-500">🔊</span>
               <span className="w-8 text-right text-xs tabular-nums text-ebony-clay-300">{volume}%</span>
-            </div>
-          </section>
-
-          {/* ── Risk cooldown ── */}
-          <section>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-ebony-clay-400 mb-2">
-              {t('settingsCooldown')}
-            </h3>
-            <p className="text-xs text-ebony-clay-500 mb-2">{t('settingsCooldownDesc')}</p>
-            <div className="space-y-1">
-              {(['long_blink', 'fatigue_warning', 'microsleep_suspected', 'critical_microsleep'] as const).map((state) => {
-                const sec = COOLDOWN_SECONDS[state]
-                if (sec === 0) return null
-                return (
-                  <div key={state} className="flex items-center justify-between text-xs text-ebony-clay-400">
-                    <span>{t(`risk${state.charAt(0).toUpperCase() + state.slice(1).replace(/_/g, '')}` as any)}</span>
-                    <span className="tabular-nums text-ebony-clay-300">{sec}s</span>
-                  </div>
-                )
-              })}
             </div>
           </section>
 
