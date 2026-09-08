@@ -20,12 +20,16 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Status-S4_Complete-22c55e" alt="Status" />
+  <img src="https://img.shields.io/badge/Methodology-SDD-blue" alt="SDD" />
+  <img src="https://img.shields.io/badge/Type-Prototype-orange" alt="Prototype" />
   <img src="https://img.shields.io/github/license/Gentleman-Programming/FatigueVisionAI" alt="License" />
 </p>
 
 <p align="center">
   <a href="README.es.md">🇪🇸 Español</a> | <strong>🇬🇧 English</strong>
 </p>
+
+> **Independent project** built using **Spec-Driven Development (SDD)** with AI-assisted coding. The project follows a phased methodology with exploration, proposal, spec, design, tasks, implementation, verification, and archival stages — each with review gates. This is a **working prototype** that can be further improved and adapted for production use.
 
 ---
 

@@ -20,12 +20,16 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Status-S4_Complete-22c55e" alt="Status" />
+  <img src="https://img.shields.io/badge/Methodology-SDD-blue" alt="SDD" />
+  <img src="https://img.shields.io/badge/Type-Prototype-orange" alt="Prototype" />
   <img src="https://img.shields.io/github/license/Gentleman-Programming/FatigueVisionAI" alt="License" />
 </p>
 
 <p align="center">
   <strong>🇪🇸 Español</strong> | <a href="README.md">🇬🇧 English</a>
 </p>
+
+> **Proyecto independiente** construido utilizando **Spec-Driven Development (SDD)** con asistencia de IA. El proyecto sigue una metodología por fases con etapas de exploración, propuesta, especificación, diseño, tareas, implementación, verificación y archivado — cada una con puertas de revisión. Este es un **prototipo funcional** que puede seguir mejorándose y adaptándose para uso en producción.
 
 ---
 
