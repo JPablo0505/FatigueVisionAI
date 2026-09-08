@@ -5,7 +5,6 @@
  * - Camera device selector
  * - Alarm type selector (beep / siren / emergency / buzzer)
  * - Alarm volume slider
- * - Risk cooldown display
  * - Landmark overlay toggles
  * - Model mode display (informational)
  *
