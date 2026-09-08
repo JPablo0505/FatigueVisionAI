@@ -15,7 +15,7 @@ from pathlib import Path
 # Paths
 # ---------------------------------------------------------------------------
 SPEC_DIR = Path(SPECPATH)  # noqa: F821 — injected by PyInstaller
-REPO_ROOT = SPEC_DIR.parent.parent.parent
+REPO_ROOT = SPEC_DIR.parent.parent
 BACKEND_DIR = REPO_ROOT / "apps" / "backend"
 PACKAGES_DIR = REPO_ROOT / "packages"
 MODELS_DIR = REPO_ROOT / "models"
