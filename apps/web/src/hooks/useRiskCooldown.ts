@@ -1,12 +1,14 @@
 /**
- * useRiskCooldown (S4-02 fix).
+ * useRiskCooldown (S4-02 fix, v2).
  *
- * Wraps the raw assessment from the backend and enforces a minimum hold time
- * for elevated risk states. When the user opens their eyes after a microsleep,
- * the risk state stays elevated for COOLDOWN_MS before allowing a downgrade.
+ * TWO separate outputs:
+ * - `displayAssessment` — cooldown-adjusted, used by RiskBanner for visual hold.
+ * - `rawAssessment` — the unmodified backend state, used by useFatigueAlert
+ *   to detect real escalations. This ensures that when the backend detects
+ *   a worse state during cooldown, the alarm still fires.
  *
- * This prevents the "instant green" problem where the dashboard immediately
- * shows normal after a critical microsleep ends.
+ * The cooldown ONLY holds the DISPLAY state — it never masks backend escalations
+ * from the alert system.
  */
 import { useEffect, useRef, useState } from 'react'
 import type { FatigueAssessment, RiskState } from '@fatiguevision/contracts'
@@ -22,12 +24,8 @@ const SEVERITY: Record<RiskState, number> = {
 
 /**
  * Cooldown durations per severity level (ms).
- * After reaching this state, it cannot drop below the threshold for this long.
- * - critical_microsleep: 15s cooldown (longest — most dangerous)
- * - microsleep_suspected: 10s
- * - fatigue_warning: 5s
- * - long_blink: 3s
- * - normal: 0 (no cooldown)
+ * After reaching this state, the DISPLAY holds for this long before allowing
+ * a downgrade. The raw state is ALWAYS passed through for alert detection.
  */
 const COOLDOWN_MS: Record<RiskState, number> = {
   normal: 0,
@@ -38,9 +36,11 @@ const COOLDOWN_MS: Record<RiskState, number> = {
 }
 
 export interface RiskCooldownResult {
-  /** The cooldown-adjusted assessment (state may be held higher than raw). */
-  assessment: FatigueAssessment | null
-  /** Whether the currently displayed state is being held by cooldown. */
+  /** Cooldown-adjusted assessment for DISPLAY (RiskBanner). */
+  displayAssessment: FatigueAssessment | null
+  /** Raw assessment from backend for ALERT DETECTION (useFatigueAlert). */
+  rawAssessment: FatigueAssessment | null
+  /** Whether the display is being held by cooldown. */
   isHeld: boolean
   /** Ms remaining in the current cooldown hold. */
   holdRemainingMs: number
@@ -61,28 +61,26 @@ export function useRiskCooldown(raw: FatigueAssessment | null): RiskCooldownResu
       cooldownTimerRef.current = null
     }
 
-    // If the new raw state is MORE severe than what we're holding, upgrade immediately
+    // If there's no held state OR the new raw state is MORE severe → upgrade
     if (heldState === null || currentSeverity > SEVERITY[heldState]) {
       setHeldState(currentRaw)
       setHeldSince(Date.now())
 
-      // Set a timer to re-evaluate after the cooldown for this level
       const cooldown = COOLDOWN_MS[currentRaw]
       if (cooldown > 0) {
         cooldownTimerRef.current = window.setTimeout(() => {
           cooldownTimerRef.current = null
-          setHeldState(null) // Release hold, re-evaluate on next raw change
+          setHeldState(null)
         }, cooldown)
       }
       return
     }
 
-    // If we're still within the cooldown window, keep the held state
+    // Still within cooldown window → keep the held state
     if (heldState !== null) {
       const elapsed = Date.now() - heldSince
       const cooldown = COOLDOWN_MS[heldState]
       if (cooldown > 0 && elapsed < cooldown) {
-        // Set timer for remaining cooldown
         const remaining = cooldown - elapsed
         cooldownTimerRef.current = window.setTimeout(() => {
           cooldownTimerRef.current = null
@@ -92,12 +90,12 @@ export function useRiskCooldown(raw: FatigueAssessment | null): RiskCooldownResu
       }
     }
 
-    // Cooldown expired or no hold — use raw state
+    // Cooldown expired — release
     setHeldState(null)
   }, [raw])
 
-  // Determine effective state
-  const effectiveState: RiskState = (() => {
+  // Display state: cooldown-adjusted (for RiskBanner visual hold)
+  const displayState: RiskState = (() => {
     if (heldState !== null) {
       const elapsed = Date.now() - heldSince
       const cooldown = COOLDOWN_MS[heldState]
@@ -108,17 +106,19 @@ export function useRiskCooldown(raw: FatigueAssessment | null): RiskCooldownResu
     return currentRaw
   })()
 
-  const isHeld = effectiveState !== currentRaw
+  const isHeld = displayState !== currentRaw
   const holdRemainingMs = isHeld && heldState !== null
     ? Math.max(0, COOLDOWN_MS[heldState] - (Date.now() - heldSince))
     : 0
 
-  // Build the adjusted assessment
-  const assessment: FatigueAssessment | null = raw === null
+  // Display assessment: cooldown-adjusted (RiskBanner sees this)
+  const displayAssessment: FatigueAssessment | null = raw === null
     ? null
-    : effectiveState === raw.state
+    : displayState === raw.state
       ? raw
-      : { ...raw, state: effectiveState }
+      : { ...raw, state: displayState }
 
-  return { assessment, isHeld, holdRemainingMs }
+  // Raw assessment: ALWAYS the real backend state (useFatigueAlert sees this)
+  // This ensures escalations are never masked by cooldown.
+  return { displayAssessment, rawAssessment: raw, isHeld, holdRemainingMs }
 }

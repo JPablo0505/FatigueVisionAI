@@ -205,7 +205,7 @@ function App() {
   const [soundEnabled, setSoundEnabled] = useState<boolean>(readSoundEnabled)
 
   // S4-02 fix: Risk cooldown — prevents instant recovery after microsleep
-  const { assessment: rawAssessment, isHeld: isRiskHeld, holdRemainingMs } = useRiskCooldown(assessment)
+  const { displayAssessment, rawAssessment, isHeld: isRiskHeld, holdRemainingMs } = useRiskCooldown(assessment)
 
   const { alert, dismiss } = useFatigueAlert(rawAssessment, soundEnabled)
 
@@ -399,7 +399,7 @@ function App() {
           </div>
 
           <div className="flex flex-col gap-6">
-            <RiskBanner assessment={rawAssessment} isHeld={isRiskHeld} holdRemainingMs={holdRemainingMs} />
+            <RiskBanner assessment={displayAssessment} isHeld={isRiskHeld} holdRemainingMs={holdRemainingMs} />
             <SystemStatusPanel visionStatus={visionStatus} overlay={overlay} fps={overlayFps} />
             <BiometricsPanel assessment={assessment} />
             <FatiguePanel assessment={assessment} />
