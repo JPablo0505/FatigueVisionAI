@@ -1,117 +1,100 @@
-# FatigueVision AI
+<p align="center">
+  <img src="apps/web/src/assets/logo.png" alt="FatigueVision AI Logo" width="120" />
+</p>
 
-Plataforma de monitoreo de fatiga mediante visión artificial. Detecta signos de fatiga y microsueños a partir de una cámara convencional, ejecutando todo el procesamiento de forma local, sin depender de servicios externos.
+<h1 align="center">FatigueVision AI</h1>
 
-Este repositorio es un monorepo que reutiliza código entre la aplicación web y la aplicación de escritorio.
+<p align="center">
+  <strong>Real-time driver fatigue monitoring system using computer vision and machine learning.</strong>
+</p>
 
-> **Estado actual:** Sprint 1 completo. El sistema detecta fatiga y microsueños en tiempo real: cámara + Vision Engine (MediaPipe), Feature Extractor (ventana deslizante de 30 s), heurística de riesgo (S1-17) y dashboard web con overlay facial, eventos biométricos, alertas y sonido (S1-19). La base de datos PostgreSQL queda para el Sprint 2.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" alt="React" />
+  <img src="https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/MediaPipe-Face_Mesh-FF6F00" alt="MediaPipe" />
+  <img src="https://img.shields.io/badge/Scikit--Learn-RandomForest-DB2D20?logo=scikit-learn&logoColor=white" alt="Scikit-Learn" />
+</p>
 
-## Requisitos
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-S4_Complete-22c55e" alt="Status" />
+  <img src="https://img.shields.io/github/license/Gentleman-Programming/FatigueVisionAI" alt="License" />
+</p>
 
-| Herramienta | Versión | Obligatoria | Notas |
-|-------------|---------|-------------|-------|
-| Node.js | 24+ | Sí | Para web y desktop |
-| pnpm | 11+ | Sí | Gestor de paquetes del workspace |
-| uv | reciente | Sí | Gestor de dependencias y entornos Python |
-| Docker | 29+ | Opcional | Solo para levantar el backend en contenedor |
-| Rust + MSVC | — | Solo desktop | Únicamente para construir la app de escritorio |
+---
 
-## Estructura
+## Caracteristicas Principales
+
+- **Deteccion en tiempo real** — EAR (Eye Aspect Ratio), MAR (Mouth Aspect Ratio), PERCLOS y blink rate calculados sobre ventanas deslizantes de 5 segundos.
+- **Modelo ML optimizado** — `fatigue_v3.joblib` (RandomForest, CV F1-macro 0.8857) con override en tiempo real para cierres de ojos instantaneos.
+- **Dashboard ebony-clay** — Panel de control con paleta oscura, gauge de riesgo, metricas en vivo y overlay facial con 468 landmarks.
+- **Alarmas criticas** — 4 tipos de alarma sonora (beep, siren, emergency, buzzer) con Web Audio API, volumen fijo al 100%.
+- **Procesamiento local** — Todo el pipeline corre en la maquina, sin dependencia de servicios externos.
+
+## Arquitectura del Monorepo
 
 ```
-fatiguevision-ai/
-├─ apps/
-│  ├─ web/        # Frontend React + Vite + Tailwind
-│  ├─ backend/    # API FastAPI
-│  └─ desktop/    # App de escritorio Tauri (reutiliza apps/web)
-├─ packages/      # Módulos compartidos (contracts: contratos de comunicación, ui, vision-engine, ai-engine, feature-extractor)
-├─ docker/        # Docker Compose
-├─ datasets/      # Datasets de entrenamiento (sprints futuros)
-├─ models/        # Modelos de IA (sprints futuros)
-└─ docs/          # PRD, reglas de desarrollo y SDD
+FatigueVisionAI/
+├── apps/
+│   ├── web/              # Frontend React + Vite + Tailwind CSS
+│   └── backend/          # API FastAPI + WebSocket
+├── packages/
+│   ├── ai-engine/        # Modelo ML y pipeline de inferencia
+│   ├── feature-extractor/# Geometria facial y ventanas deslizantes
+│   ├── vision-engine/    # Deteccion facial con MediaPipe
+│   └── contracts/        # Esquemas compartidos TS/Python
+├── datasets/             # Datos de entrenamiento (YAWDD, etc.)
+└── models/               # Modelos de IA (no commiteados)
 ```
 
-## Inicio rápido
+## Instrucciones de Ejecucion Local
 
-1. Copiar la configuración de entorno:
+### Requisitos
 
-   ```
-   cp .env.example .env
-   ```
+- **Node.js** 24+ y **pnpm** 11+
+- **Python** 3.12+ y **uv**
 
-2. Instalar dependencias y arrancar el frontend:
+### Frontend
 
-   ```
-   pnpm install
-   pnpm web:dev
-   ```
+```bash
+pnpm install
+pnpm web:dev          # http://localhost:5173
+```
 
-3. Preparar y arrancar el backend:
+### Backend
 
-   ```
-   uv sync --project apps/backend
-   uv run --project apps/backend uvicorn app.main:app --reload --port 8000
-   ```
+```bash
+cd apps/backend
+uv sync
+$env:CAMERA_SOURCE = "browser"
+$env:FATIGUE_MODEL_TYPE = "ml"
+uvicorn app.main:app --reload --port 8000
+```
 
-Comandos disponibles desde la raíz:
+El backend expone `http://localhost:8000/api/healthz` y el WebSocket en `ws://localhost:8000/ws`.
 
-| Comando | Acción |
+### Comandos Disponibles
+
+| Comando | Accion |
 |---------|--------|
-| `pnpm web:dev` | Dev server de la web (puerto 5173) |
-| `pnpm web:build` | Build de producción de la web |
-| `pnpm backend:test` | Test del backend (pytest) |
+| `pnpm web:dev` | Dev server (puerto 5173) |
+| `pnpm web:build` | Build de produccion |
+| `pnpm backend:test` | Tests del backend (pytest) |
 | `pnpm backend:lint` | Lint del backend (ruff) |
-| `pnpm backend:typecheck` | Typecheck del backend (mypy) |
-| `pnpm desktop:dev` | App de escritorio (requiere Rust) |
 
-## Backend con Docker
+## Estado del Proyecto
 
-La base de datos llegará en un sprint posterior. Para levantar únicamente el backend:
+| Sprint | Estado | Descripcion |
+|--------|--------|-------------|
+| **S1** | Completado | Vision Engine, Feature Extractor, AI Engine (heuristica), Backend WS, Frontend dashboard |
+| **S2** | Completado | Infraestructura de datasets, modelo ML entrenado (v3) |
+| **S3** | Completado | Umbral critico ajustado, override en tiempo real, head-pose guard |
+| **S4** | Completado | UX ebony-clay, logo, settings panel, alarmas configurables, overlay unificado |
 
-```
-docker compose -f docker/compose.yaml up --build
-```
+---
 
-El backend responde en `http://localhost:8000/api/healthz`.
-
-## Configuración por variables de entorno
-
-Toda la configuración se hace mediante variables de entorno. Ver `.env.example` para la lista completa con sus valores por defecto.
-
-## Modelos (Vision Engine)
-
-Los modelos de visión se descargan con un script reproducible y se almacenan en `models/` (ignorado por git; el manifest con los hashes vive en `scripts/` y sí se commitea).
-
-Descargar (o verificar) todos los modelos:
-
-```
-uv run --no-project --python 3.12 scripts/fetch_models.py
-```
-
-El script solo descarga lo que falta o está corrupto (valida SHA-256 contra el manifest); verificación sin descarga para CI:
-
-```
-uv run --no-project --python 3.12 scripts/fetch_models.py --check
-```
-
-Modelos en uso actualmente:
-
-| Modelo | Archivo | Destino |
-|--------|---------|---------|
-| face_detector | `face_detector.tflite` (BlazeFace short range) | `models/vision/face_detector.tflite` |
-| face_landmarker | `face_landmarker.task` (468 puntos de referencia) | `models/vision/face_landmarker.task` |
-
-Para agregar un modelo nuevo: añadir su entrada (nombre, subdirectorio, archivo, URL y SHA-256) a `scripts/models_manifest.json` y volver a correr el script. Los adaptadores del Vision Engine reciben la ruta del modelo por constructor, así que la gestión de modelos es independiente del código de visión.
-
-**Modo offline:** una vez descargados, no se necesita red. El script salta los modelos ya presentes con hash válido, y `--check` solo verifica lo que hay en disco.
-
-## Sprint 1 — ya implementado
-
-- **Vision Engine** (`packages/vision-engine`): cámara (OpenCV, DSHOW-first en Windows), detección facial y malla de 468 puntos (MediaPipe), pipeline por estados.
-- **Feature Extractor** (`packages/feature-extractor`): geometría facial (EAR, MAR, iris, head pose) y ventana deslizante de 30 s con agregados temporales.
-- **AI Engine** (`packages/ai-engine`): heurística de riesgo (S1-17) con escalera de estados `normal → long_blink → fatigue_warning → microsleep_suspected → critical_microsleep` y puntaje 0–100; seam para un modelo entrenado futuro.
-- **Backend** (`apps/backend`): FastAPI + WebSocket con overlay por frame, assessments ~10 Hz, eventos biométricos, ping/keep-alive y reconexión.
-- **Frontend** (`apps/web`): dashboard en tiempo real con gauge, métricas, RiskBanner, overlay facial (parpadeo, bostezo, dirección de iris, head pose), espejo configurable, alertas temporales y sonido por severidad (S1-19).
-- **Contratos compartidos** (`packages/contracts`): esquema de mensajes WS y eventos sincronizado entre TS y Python.
-
-Pendiente para el Sprint 2: base de datos PostgreSQL, modelo de IA entrenado, packaging desktop y entrenamiento con datasets reales.
+<p align="center">
+  <sub>Construido con pasion para la seguridad vial.</sub>
+</p>
