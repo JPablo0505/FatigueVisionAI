@@ -25,11 +25,13 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
-          cache: 'pnpm'
+          node-version: '22'
 
-      - name: Install pnpm
-        run: npm install -g pnpm
+      - name: Enable corepack and install pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+          pnpm --version
 
       - name: Install frontend dependencies
         run: pnpm install
@@ -51,12 +53,6 @@ jobs:
       - name: Build backend (PyInstaller)
         run: pyinstaller apps/backend/fatigue_backend.spec
         working-directory: .
-
-      - name: Assemble release
-        run: python scripts/package_release.py --skip-inno --frontend-only
-        working-directory: .
-        env:
-          SKIP_FRONTEND_BUILD: '1'
 
       - name: Create zip artifact
         run: |
