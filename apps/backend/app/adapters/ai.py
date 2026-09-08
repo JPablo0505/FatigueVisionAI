@@ -5,6 +5,11 @@ instantaneous critical events like a 6-second eye closure. This adapter
 applies a real-time override AFTER the model prediction: if the current
 eye closure duration exceeds the critical threshold, the state is forced
 to the appropriate risk level regardless of what the model predicted.
+
+IMPORTANT: We only override on `current_eye_closure_duration` (real-time),
+NOT on `longest_eye_closure_duration` (cumulative). The longest duration
+never decreases within a window, so using it would cause the state to get
+STUCK at critical/microsleep even after the user opens their eyes.
 """
 
 from __future__ import annotations
@@ -33,28 +38,19 @@ _OVERRIDE_SEVERITY: dict[RiskState, int] = {
 def _realtime_override(features: FatigueFeatures, model_state: RiskState) -> RiskState:
     """Check instantaneous features and escalate if needed.
 
-    The ML model sees aggregate window stats. A 6-second active closure
-    can happen BETWEEN window updates. This checks real-time features
-    and escalates — only upgrading, never downgrading.
+    Uses ONLY current_eye_closure_duration (real-time, goes to 0 when eyes
+    open). Does NOT use longest_eye_closure_duration (cumulative, never
+    decreases — would cause stuck alerts).
     """
     active = features.current_eye_closure_duration
-    longest = features.longest_eye_closure_duration
 
     override = RiskState.normal
-
-    # Active closure (eyes currently closed) — highest priority
     if active >= _ACTIVE_CRITICAL_S:
         override = RiskState.critical_microsleep
     elif active >= _ACTIVE_MICROSLEEP_S:
         override = RiskState.microsleep_suspected
     elif active >= _ACTIVE_WARNING_S:
         override = RiskState.fatigue_warning
-
-    # Historical longest closure — secondary check
-    if longest >= _ACTIVE_CRITICAL_S:
-        override = max(override, RiskState.critical_microsleep, key=lambda s: _OVERRIDE_SEVERITY[s])
-    elif longest >= _ACTIVE_MICROSLEEP_S:
-        override = max(override, RiskState.microsleep_suspected, key=lambda s: _OVERRIDE_SEVERITY[s])
 
     # Only escalate, never downgrade from the model's prediction
     if _OVERRIDE_SEVERITY.get(override, 0) > _OVERRIDE_SEVERITY.get(model_state, 0):

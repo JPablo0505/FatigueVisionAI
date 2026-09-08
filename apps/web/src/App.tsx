@@ -412,8 +412,6 @@ function App() {
         onVolumeChange={setVolume}
         alarmType={alarmType}
         onAlarmTypeChange={setAlarmType}
-        options={overlayOptions}
-        onOptionsChange={setOverlayOptions}
       />
     </div>
   )

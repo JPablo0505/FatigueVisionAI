@@ -419,8 +419,8 @@ function drawStatusRing(
   ctx.restore()
 }
 
-/** HUD superior izquierdo: FPS, latencia y estado del WebSocket. */
-function drawHud(ctx: CanvasRenderingContext2D, hud: HudData, t: T): void {
+/** HUD superior derecho: FPS, latencia y estado del WebSocket. */
+function drawHud(ctx: CanvasRenderingContext2D, hud: HudData, t: T, canvasWidth: number): void {
   const connection =
     hud.connection === 'connected'
       ? { color: '#22c55e', label: t('connected') }
@@ -439,10 +439,10 @@ function drawHud(ctx: CanvasRenderingContext2D, hud: HudData, t: T): void {
   const maxWidth = lines.reduce((max, line) => Math.max(max, ctx.measureText(line.text).width), 0)
   const padX = 14
   const padY = 10
-  const boxX = 8
-  const boxY = 8
   const boxW = maxWidth + padX * 2 + 16
   const boxH = lines.length * lineHeight + padY * 2
+  const boxX = canvasWidth - boxW - 8
+  const boxY = 8
   ctx.fillStyle = HUD_BG_COLOR
   ctx.beginPath()
   ctx.roundRect(boxX, boxY, boxW, boxH, 8)
@@ -520,7 +520,7 @@ function drawOverlay(
   t: T,
 ): void {
   if (options.hud) {
-    drawHud(ctx, hud, t)
+    drawHud(ctx, hud, t, width)
   }
   if (overlay === null || overlay.face_count === 0) return
   for (const face of overlay.faces) {

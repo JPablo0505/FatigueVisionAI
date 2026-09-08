@@ -5,13 +5,11 @@
  * - Camera device selector
  * - Alarm type selector (beep / siren / emergency / buzzer)
  * - Alarm volume slider
- * - Landmark overlay toggles
  * - Model mode display (informational)
  *
  * All preferences persisted in localStorage.
  */
 import { useEffect, useState } from 'react'
-import type { OverlayOptions } from './WebcamFeed'
 import { useLanguage } from '../i18n'
 import { ALARM_TYPES } from '../lib/alertSound'
 import type { AlarmType } from '../lib/alertSound'
@@ -55,9 +53,6 @@ interface SettingsPanelProps {
   /* alarm type */
   alarmType: AlarmType
   onAlarmTypeChange: (t: AlarmType) => void
-  /* overlay options (shared with OverlayControls) */
-  options: OverlayOptions
-  onOptionsChange: (o: OverlayOptions) => void
 }
 
 /* ---------- component ---------- */
@@ -68,8 +63,6 @@ export function SettingsPanel({
   onVolumeChange,
   alarmType,
   onAlarmTypeChange,
-  options,
-  onOptionsChange,
 }: SettingsPanelProps) {
   const { t } = useLanguage()
   const [devices, setDevices] = useState<Array<{ id: string; label: string }>>([])
@@ -113,11 +106,6 @@ export function SettingsPanel({
   const handleAlarmType = (type: AlarmType) => {
     onAlarmTypeChange(type)
     window.localStorage.setItem(ALARM_KEY, type)
-  }
-
-  /* Overlay toggle helper */
-  const toggle = (key: keyof OverlayOptions) => {
-    onOptionsChange({ ...options, [key]: !options[key] })
   }
 
   /* Close on Escape */
@@ -238,35 +226,6 @@ export function SettingsPanel({
               {t('settingsModelMode')}
             </h3>
             <p className="text-xs text-ebony-clay-500">{t('settingsModelModeDesc')}</p>
-          </section>
-
-          {/* ── Overlay toggles ── */}
-          <section>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-ebony-clay-400 mb-2">
-              {t('settingsOverlays')}
-            </h3>
-            <div className="space-y-2">
-              {([
-                ['landmarks', t('overlayLandmarks')] as const,
-                ['bbox', t('overlayBbox')] as const,
-                ['eyes', t('overlayEyes')] as const,
-                ['mouth', t('overlayMouth')] as const,
-                ['gaze', t('overlayGaze')] as const,
-                ['headPose', t('overlayHeadPose')] as const,
-                ['statusRing', t('overlayStatusRing')] as const,
-                ['hud', t('overlayHud')] as const,
-              ] as const).map(([key, label]) => (
-                <label key={key} className="flex items-center justify-between gap-3 text-sm text-ebony-clay-300 cursor-pointer">
-                  <span>{label}</span>
-                  <input
-                    type="checkbox"
-                    checked={options[key]}
-                    onChange={() => toggle(key)}
-                    className="h-4 w-4 accent-cyan-500"
-                  />
-                </label>
-              ))}
-            </div>
           </section>
         </div>
       </aside>
