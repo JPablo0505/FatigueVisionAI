@@ -1,29 +1,30 @@
 {
-  "version": "2.0.0",
-  "model_name": "fatigue_v2",
-  "description": "RandomForest fatigue classifier retrained on fused YAWDD + DDD full datasets",
-  "artifact_path": "ai_engine/models/fatigue_v2.joblib",
-  "artifact_size_bytes": 363520,
-  "trained_on": "2026-09-07T04:13:11Z",
+  "version": "3.0.0",
+  "model_name": "fatigue_v3",
+  "description": "RandomForest fatigue classifier retrained on 5-second windows from fused YAWDD + DDD datasets",
+  "artifact_path": "ai_engine/models/fatigue_v3.joblib",
+  "artifact_size_bytes": 590500,
+  "trained_on": "2026-09-08T00:14:50Z",
   "training_data": {
-    "dataset": "fused (YAWDD 153 windows 46 subjects + DDD 195 windows 25 subjects)",
-    "train_windows": 245,
-    "val_windows": 46,
-    "test_windows": 57,
-    "total_subjects": 71,
+    "dataset": "fused (YAWDD 459 windows 47 subjects + DDD 425 windows 25 subjects)",
+    "window_seconds": 5,
+    "train_windows": 549,
+    "val_windows": 135,
+    "test_windows": 200,
+    "total_subjects": 72,
     "feature_count": 20
   },
   "evaluation": {
-    "cv_accuracy_mean": 0.7796,
-    "cv_accuracy_std": 0.0820,
-    "cv_f1_macro_mean": 0.8071,
-    "cv_f1_macro_std": 0.0729,
-    "cv_f1_weighted_mean": 0.7727,
-    "cv_f1_weighted_std": 0.0829,
-    "test_accuracy": 0.9123,
-    "test_f1_macro": 0.9352,
-    "test_f1_weighted": 0.9127,
-    "test_samples": 57,
+    "cv_accuracy_mean": 0.8834,
+    "cv_accuracy_std": 0.0903,
+    "cv_f1_macro_mean": 0.8857,
+    "cv_f1_macro_std": 0.0906,
+    "cv_f1_weighted_mean": 0.8830,
+    "cv_f1_weighted_std": 0.0903,
+    "holdout_val_accuracy": 0.7481,
+    "holdout_val_f1_macro": 0.7782,
+    "holdout_test_accuracy": 0.6700,
+    "holdout_test_f1_macro": 0.4431,
     "cv_folds": 5
   },
   "hyperparameters": {
@@ -55,5 +56,5 @@
   "adapter_class": "MLFatigueModel",
   "adapter_module": "ai_engine.ml_model",
   "status": "production_ready",
-  "notes": "S2-02b full multi-dataset model. 34,696 DDD frames processed (99.9% face detection). 195 DDD windows (25 subjects) fused with 153 YAWDD windows (46 subjects). 348 total windows, 71 subjects. Zero data leakage. GroupKFold CV (K=5) + held-out test."
+  "notes": "S3-05 retrained with 5-second windows (150 frames @ 30fps) to fix ML inference degradation with short windows. 884 total windows (3x more than v2's 348). CV F1-macro 0.8857 on 5s windows. Fixes the critical finding from S3-04 where v2 classified all 5s inputs as low/normal."
 }

@@ -39,7 +39,7 @@ from ai_engine.types import (
 # Default artifact path (promoted production model)
 # ---------------------------------------------------------------------------
 _MODELS_DIR = Path(__file__).resolve().parent / "models"
-_DEFAULT_ARTIFACT = _MODELS_DIR / "fatigue_v2.joblib"
+_DEFAULT_ARTIFACT = _MODELS_DIR / "fatigue_v3.joblib"
 
 # ---------------------------------------------------------------------------
 # Score mapping constants

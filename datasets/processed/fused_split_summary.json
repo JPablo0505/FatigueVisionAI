@@ -1,0 +1,55 @@
+{
+  "total_windows": 884,
+  "total_subjects": 72,
+  "splits": {
+    "train": {
+      "windows": 549,
+      "pct": 62.1,
+      "subjects": 50,
+      "target_counts": {
+        "yawning": 186,
+        "normal": 168,
+        "unknown": 101,
+        "talking": 94
+      },
+      "target_pct": {
+        "yawning": 33.9,
+        "normal": 30.6,
+        "unknown": 18.4,
+        "talking": 17.1
+      }
+    },
+    "val": {
+      "windows": 135,
+      "pct": 15.3,
+      "subjects": 10,
+      "target_counts": {
+        "yawning": 56,
+        "normal": 34,
+        "unknown": 29,
+        "talking": 16
+      },
+      "target_pct": {
+        "yawning": 41.5,
+        "normal": 25.2,
+        "unknown": 21.5,
+        "talking": 11.9
+      }
+    },
+    "test": {
+      "windows": 200,
+      "pct": 22.6,
+      "subjects": 12,
+      "target_counts": {
+        "yawning": 120,
+        "normal": 73,
+        "talking": 7
+      },
+      "target_pct": {
+        "yawning": 60.0,
+        "normal": 36.5,
+        "talking": 3.5
+      }
+    }
+  }
+}

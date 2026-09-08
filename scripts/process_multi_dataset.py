@@ -284,8 +284,8 @@ def window_ddd_by_subject(
     # Use a window that captures subject-level patterns
     # DDD subjects have varying image counts (400-3600)
     config = WindowingConfig(
-        window_size=300,       # ~10 seconds equivalent
-        step_size=150,         # 50% overlap
+        window_size=150,       # ~5 seconds equivalent
+        step_size=75,          # 50% overlap
         min_fill_ratio=0.3,    # Lower threshold since images are independent
         ear_closed_threshold=0.25,
         yawn_event_threshold=0.20,
