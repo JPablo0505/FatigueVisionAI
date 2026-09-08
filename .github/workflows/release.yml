@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install frontend dependencies
+        run: pnpm install
+        working-directory: apps/web
+
+      - name: Install backend dependencies
+        run: |
+          pip install uv
+          uv sync --project apps/backend
+        working-directory: .
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build frontend (Vite)
+        run: pnpm run build
+        working-directory: apps/web
+
+      - name: Build backend (PyInstaller)
+        run: pyinstaller apps/backend/fatigue_backend.spec
+        working-directory: .
+
+      - name: Assemble release
+        run: python scripts/package_release.py --skip-inno --frontend-only
+        working-directory: .
+        env:
+          SKIP_FRONTEND_BUILD: '1'
+
+      - name: Create zip artifact
+        run: |
+          $version = "${{ github.ref_name }}"
+          Compress-Archive -Path "dist\fatigue_backend\*" -DestinationPath "dist\FatigueVisionAI-${version}-win64.zip"
+        working-directory: .
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/FatigueVisionAI-*-win64.zip
+            dist/fatigue_backend/fatigue_backend.exe
+          draft: false
+          prerelease: false
+          generate_release_notes: true
