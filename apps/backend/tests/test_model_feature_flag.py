@@ -75,7 +75,7 @@ class TestBuildFatigueModel:
         assert isinstance(model, FatigueModel)
         # MLFatigueModel has a version property
         assert hasattr(model, "version")
-        assert model.version == "fatigue_v2"
+        assert model.version == "fatigue_v3"
 
     def test_heuristic_model_instantiated(self) -> None:
         settings = Settings(fatigue_model_type="heuristic")
@@ -128,7 +128,7 @@ class TestBuildAdapters:
         # The AIAdapter wraps a FatiguePipeline which holds the predictor
         predictor = ai._pipeline.predictor
         assert hasattr(predictor, "version")
-        assert predictor.version == "fatigue_v2"
+        assert predictor.version == "fatigue_v3"
 
     def test_heuristic_adapter_uses_heuristic_model(self) -> None:
         settings = Settings(fatigue_model_type="heuristic")
