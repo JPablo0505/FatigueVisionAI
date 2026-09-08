@@ -51,47 +51,74 @@ FatigueVisionAI/
 
 ## Instrucciones de Ejecucion Local
 
-### Requisitos
+### Inicio Rapido (Recomendado)
 
-- **Node.js** 24+ y **pnpm** 11+
-- **Python** 3.12+ y **uv**
+Los scripts automatizan la instalacion de dependencias, el levantamiento del backend y frontend, y abren el navegador automaticamente.
 
-### Frontend
-
-```bash
-pnpm install
-pnpm web:dev          # http://localhost:5173
+**Windows:**
+```bat
+start_app.bat
 ```
 
-### Backend
+**Linux / macOS:**
+```bash
+bash start_app.sh
+```
+
+> Los scripts detectan si las dependencias ya estan instaladas y las omiten en futuras ejecuciones.
+
+### Inicio Manual
+
+#### Requisitos
+
+- **Node.js** 22+ y **pnpm** (via corepack)
+- **Python** 3.12+ y **uv**
+
+#### Frontend
+
+```bash
+cd apps/web
+npm install
+npm run dev          # http://localhost:5173
+```
+
+#### Backend
 
 ```bash
 cd apps/backend
-uv sync
-$env:CAMERA_SOURCE = "browser"
-$env:FATIGUE_MODEL_TYPE = "ml"
-uvicorn app.main:app --reload --port 8000
+python -m venv .venv
+. .venv/bin/activate  # Linux/macOS
+# .venv\Scripts\activate  # Windows
+
+uv pip install -e ../../packages/feature-extractor
+uv pip install -e ../../packages/ai-engine
+uv pip install -e ../../packages/vision-engine
+uv pip install -e .
+
+CAMERA_SOURCE=browser FATIGUE_MODEL_TYPE=ml uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-El backend expone `http://localhost:8000/api/healthz` y el WebSocket en `ws://localhost:8000/ws`.
+El backend expone `http://localhost:8000/api/vision/status` y el WebSocket en `ws://localhost:8000/ws`.
 
 ### Comandos Disponibles
 
 | Comando | Accion |
 |---------|--------|
-| `pnpm web:dev` | Dev server (puerto 5173) |
-| `pnpm web:build` | Build de produccion |
-| `pnpm backend:test` | Tests del backend (pytest) |
-| `pnpm backend:lint` | Lint del backend (ruff) |
+| `start_app.bat` / `bash start_app.sh` | Inicio automatico completo |
+| `npm run dev` | Dev server frontend (puerto 5173) |
+| `npm run build` | Build de produccion |
+| `uvicorn app.main:app --reload` | Backend con hot-reload (puerto 8000) |
 
 ## Estado del Proyecto
 
 | Sprint | Estado | Descripcion |
 |--------|--------|-------------|
 | **S1** | Completado | Vision Engine, Feature Extractor, AI Engine (heuristica), Backend WS, Frontend dashboard |
-| **S2** | Completado | Infraestructura de datasets, modelo ML entrenado (v3) |
+| **S2** | Completado | Infraestructura de datasets, modelo ML entrenado (v3, F1-macro 0.8857) |
 | **S3** | Completado | Umbral critico ajustado, override en tiempo real, head-pose guard |
-| **S4** | Completado | UX ebony-clay, logo, settings panel, alarmas configurables, overlay unificado |
+| **S4** | Completado | UX ebony-clay, logo, settings panel, alarmas, scripts de distribucion local |
+
+**Proyecto completado.** Sistema funcional end-to-end: camara del navegador → WebSocket → MediaPipe face detection → ML fatigue assessment → dashboard en tiempo real.
 
 ---
 
