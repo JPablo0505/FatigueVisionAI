@@ -203,15 +203,16 @@ function App() {
   // Sonido de alertas temporales (S1-19): preferencia persistida, se sincroniza
   // con el motor de Web Audio y el toggle de OverlayControls.
   const [soundEnabled, setSoundEnabled] = useState<boolean>(readSoundEnabled)
+
+  // S4-02 fix: Risk cooldown — prevents instant recovery after microsleep
+  const { assessment: rawAssessment, isHeld: isRiskHeld, holdRemainingMs } = useRiskCooldown(assessment)
+
   const { alert, dismiss } = useFatigueAlert(rawAssessment, soundEnabled)
 
   // S4-02: Settings panel & alarm config
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [volume, setVolume] = useState(readAlertVolume)
   const [alarmType, setAlarmType] = useState<AlarmType>(readAlarmType)
-
-  // S4-02 fix: Risk cooldown — prevents instant recovery after microsleep
-  const { assessment: rawAssessment, isHeld: isRiskHeld, holdRemainingMs } = useRiskCooldown(assessment)
 
   // S4-01: Flash visual rojo cuando el estado es critical_microsleep
   const isCritical = assessment?.state === 'critical_microsleep'

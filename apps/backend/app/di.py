@@ -41,7 +41,7 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
 def _build_fatigue_model(settings: Settings):
     """Instantiate the fatigue model based on the feature flag.
 
-    ``"ml"``        → ``MLFatigueModel`` (trained RandomForest, fatigue_v2.joblib)
+    ``"ml"``        → ``MLFatigueModel`` (trained RandomForest, fatigue_v3.joblib)
     ``"heuristic"`` → ``HeuristicFatigueModel`` (rule-based, S1-17)
 
     The ``FatigueModel`` port is shared: both implementations produce a
@@ -53,7 +53,7 @@ def _build_fatigue_model(settings: Settings):
     if model_type == "ml":
         from ai_engine.ml_model import MLFatigueModel
 
-        logger.info("Fatigue model: ML (fatigue_v2.joblib)")
+        logger.info("Fatigue model: ML (fatigue_v3.joblib)")
         return MLFatigueModel()
 
     if model_type == "heuristic":
