@@ -1,15 +1,13 @@
-"""AI Engine adapter: real-time override for instantaneous critical events.
+"""AI Engine adapter: real-time override with head-pose guard.
 
 The ML model classifies on 5-second aggregate windows, which can miss
 instantaneous critical events like a 6-second eye closure. This adapter
-applies a real-time override AFTER the model prediction: if the current
-eye closure duration exceeds the critical threshold, the state is forced
-to the appropriate risk level regardless of what the model predicted.
+applies a real-time override AFTER the model prediction.
 
-IMPORTANT: We only override on `current_eye_closure_duration` (real-time),
-NOT on `longest_eye_closure_duration` (cumulative). The longest duration
-never decreases within a window, so using it would cause the state to get
-STUCK at critical/microsleep even after the user opens their eyes.
+IMPORTANT GUARD: When the user looks up or down (extreme head pitch),
+the camera perspective makes the eyes APPEAR closed even when they're
+open. We check head_pose.pitch to skip false-positive overrides during
+extreme tilt angles.
 """
 
 from __future__ import annotations
@@ -20,10 +18,15 @@ from ai_engine import FatigueFeatures, FatiguePipeline, StubFatiguePredictor
 from ai_engine.ports import FatigueModel
 from ai_engine.types import FatigueResult, RiskState
 
-# Real-time override thresholds (same as heuristic model).
+# Real-time override thresholds.
 _ACTIVE_CRITICAL_S = 1.50
 _ACTIVE_MICROSLEEP_S = 0.80
 _ACTIVE_WARNING_S = 0.50
+
+# Head-pose guard: when pitch exceeds this, eye closure measurements are
+# unreliable because the camera perspective distorts the eye landmarks.
+# The user is looking up/down (keyboard, ceiling) — NOT closing eyes.
+_HEAD_PITCH_GUARD_DEG = 25.0
 
 # Severity order for override comparison.
 _OVERRIDE_SEVERITY: dict[RiskState, int] = {
@@ -41,7 +44,16 @@ def _realtime_override(features: FatigueFeatures, model_state: RiskState) -> Ris
     Uses ONLY current_eye_closure_duration (real-time, goes to 0 when eyes
     open). Does NOT use longest_eye_closure_duration (cumulative, never
     decreases — would cause stuck alerts).
+
+    HEAD-POSE GUARD: When the user looks up or down (|pitch| > 25°),
+    the camera sees the eyes as "partially closed" even when they're open.
+    In that case, we skip the override entirely to avoid false positives.
     """
+    # Head-pose guard: skip override during extreme tilt
+    pitch = abs(features.head_pose.pitch)
+    if pitch > _HEAD_PITCH_GUARD_DEG:
+        return model_state
+
     active = features.current_eye_closure_duration
 
     override = RiskState.normal

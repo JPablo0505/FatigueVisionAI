@@ -4,31 +4,28 @@
  * Slide-in drawer for user preferences:
  * - Camera device selector
  * - Alarm type selector (beep / siren / emergency / buzzer)
- * - Alarm volume slider
+ * - Overlay controls (mirror, sound, all toggles)
  * - Model mode display (informational)
  *
- * All preferences persisted in localStorage.
+ * All preferences persisted in localStorage. Volume is always 100%.
  */
 import { useEffect, useState } from 'react'
+import type { OverlayOptions } from './WebcamFeed'
 import { useLanguage } from '../i18n'
+import type { TranslationKey } from '../i18n'
 import { ALARM_TYPES } from '../lib/alertSound'
 import type { AlarmType } from '../lib/alertSound'
 
 /* ---------- localStorage keys ---------- */
-const VOL_KEY = 'fatiguevision.alertVolume'
 const CAM_KEY = 'fatiguevision.cameraDevice'
 const ALARM_KEY = 'fatiguevision.alarmType'
 
-export const ALERT_VOLUME_KEY = VOL_KEY
+export const ALERT_VOLUME_KEY = 'fatiguevision.alertVolume'
 export const CAMERA_DEVICE_KEY = CAM_KEY
 
 /* ---------- helpers ---------- */
 export function readAlertVolume(): number {
-  if (typeof window === 'undefined') return 80
-  const raw = window.localStorage.getItem(VOL_KEY)
-  if (raw === null) return 80
-  const n = Number(raw)
-  return Number.isFinite(n) && n >= 0 && n <= 100 ? n : 80
+  return 100 // Always max — prevent users from silencing alerts
 }
 
 export function readCameraDeviceId(): string {
@@ -43,26 +40,47 @@ export function readAlarmType(): AlarmType {
   return 'siren'
 }
 
+/* ---------- overlay option labels ---------- */
+const OVERLAY_OPTIONS: Array<{ key: keyof OverlayOptions; label: TranslationKey }> = [
+  { key: 'bbox', label: 'overlayBbox' },
+  { key: 'landmarks', label: 'overlayLandmarks' },
+  { key: 'eyes', label: 'overlayEyes' },
+  { key: 'mouth', label: 'overlayMouth' },
+  { key: 'gaze', label: 'overlayGaze' },
+  { key: 'headPose', label: 'overlayHeadPose' },
+  { key: 'statusRing', label: 'overlayStatusRing' },
+  { key: 'hud', label: 'overlayHud' },
+]
+
 /* ---------- props ---------- */
 interface SettingsPanelProps {
   open: boolean
   onClose: () => void
-  /* volume 0–100 */
-  volume: number
-  onVolumeChange: (v: number) => void
   /* alarm type */
   alarmType: AlarmType
   onAlarmTypeChange: (t: AlarmType) => void
+  /* overlay options */
+  options: OverlayOptions
+  onOptionsChange: (o: OverlayOptions) => void
+  /* mirror + sound */
+  isMirrored: boolean
+  onMirroredChange: (v: boolean) => void
+  soundEnabled: boolean
+  onSoundEnabledChange: (v: boolean) => void
 }
 
 /* ---------- component ---------- */
 export function SettingsPanel({
   open,
   onClose,
-  volume,
-  onVolumeChange,
   alarmType,
   onAlarmTypeChange,
+  options,
+  onOptionsChange,
+  isMirrored,
+  onMirroredChange,
+  soundEnabled,
+  onSoundEnabledChange,
 }: SettingsPanelProps) {
   const { t } = useLanguage()
   const [devices, setDevices] = useState<Array<{ id: string; label: string }>>([])
@@ -96,16 +114,15 @@ export function SettingsPanel({
     window.localStorage.setItem(CAM_KEY, deviceId)
   }
 
-  /* Persist volume */
-  const handleVolume = (v: number) => {
-    onVolumeChange(v)
-    window.localStorage.setItem(VOL_KEY, String(v))
-  }
-
   /* Persist alarm type */
   const handleAlarmType = (type: AlarmType) => {
     onAlarmTypeChange(type)
     window.localStorage.setItem(ALARM_KEY, type)
+  }
+
+  /* Overlay toggle helper */
+  const toggleOverlay = (key: keyof OverlayOptions) => {
+    onOptionsChange({ ...options, [key]: !options[key] })
   }
 
   /* Close on Escape */
@@ -200,23 +217,44 @@ export function SettingsPanel({
             </div>
           </section>
 
-          {/* ── Alarm volume ── */}
+          {/* ── Overlay controls ── */}
           <section>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-ebony-clay-400 mb-2">
-              {t('settingsAlarmVolume')}
+              {t('overlayControlsTitle')}
             </h3>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-ebony-clay-500">🔇</span>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={volume}
-                onChange={(e) => handleVolume(Number(e.target.value))}
-                className="flex-1 accent-cyan-500"
-              />
-              <span className="text-xs text-ebony-clay-500">🔊</span>
-              <span className="w-8 text-right text-xs tabular-nums text-ebony-clay-300">{volume}%</span>
+            <div className="space-y-2">
+              {/* Mirror toggle */}
+              <label className="flex items-center justify-between gap-3 text-sm text-ebony-clay-300 cursor-pointer">
+                <span>{t('overlayMirror')}</span>
+                <input
+                  type="checkbox"
+                  checked={isMirrored}
+                  onChange={(e) => onMirroredChange(e.target.checked)}
+                  className="h-4 w-4 accent-cyan-500"
+                />
+              </label>
+              {/* Sound toggle */}
+              <label className="flex items-center justify-between gap-3 text-sm text-ebony-clay-300 cursor-pointer">
+                <span>{t('alertSound')}</span>
+                <input
+                  type="checkbox"
+                  checked={soundEnabled}
+                  onChange={(e) => onSoundEnabledChange(e.target.checked)}
+                  className="h-4 w-4 accent-cyan-500"
+                />
+              </label>
+              {/* All overlay options */}
+              {OVERLAY_OPTIONS.map(({ key, label }) => (
+                <label key={key} className="flex items-center justify-between gap-3 text-sm text-ebony-clay-300 cursor-pointer">
+                  <span>{t(label)}</span>
+                  <input
+                    type="checkbox"
+                    checked={options[key]}
+                    onChange={() => toggleOverlay(key)}
+                    className="h-4 w-4 accent-cyan-500"
+                  />
+                </label>
+              ))}
             </div>
           </section>
 

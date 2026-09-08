@@ -16,14 +16,13 @@ import { useCameraStream } from './hooks/useCameraStream'
 import { useOverlayFps } from './hooks/useOverlayFps'
 import { WebcamFeed } from './components/WebcamFeed'
 import type { OverlayConnection, OverlayOptions } from './components/WebcamFeed'
-import { OverlayControls } from './components/OverlayControls'
 import { FatigueAlert } from './components/FatigueAlert'
 import { FatigueGauge } from './components/FatigueGauge'
 import { Panel } from './components/Panel'
 import { MetricRow } from './components/MetricRow'
 import { MetricCell } from './components/MetricCell'
 import { FatigueLogo } from './components/FatigueLogo'
-import { SettingsPanel, readAlertVolume, readAlarmType } from './components/SettingsPanel'
+import { SettingsPanel, readAlarmType } from './components/SettingsPanel'
 import { alertSound } from './lib/alertSound'
 import type { AlarmType } from './lib/alertSound'
 import { formatTemplate, useLanguage } from './i18n'
@@ -200,14 +199,13 @@ function App() {
   // reales del backend, sin inversión).
   const [isMirrored, setIsMirrored] = useState(true)
   // Sonido de alertas temporales (S1-19): preferencia persistida, se sincroniza
-  // con el motor de Web Audio y el toggle de OverlayControls.
+  // con el motor de Web Audio.
   const [soundEnabled, setSoundEnabled] = useState<boolean>(readSoundEnabled)
 
   const { alert, dismiss } = useFatigueAlert(assessment, soundEnabled)
 
   // S4-02: Settings panel & alarm config
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [volume, setVolume] = useState(readAlertVolume)
   const [alarmType, setAlarmType] = useState<AlarmType>(readAlarmType)
 
   // S4-01: Flash visual rojo cuando el estado es critical_microsleep
@@ -217,10 +215,10 @@ function App() {
     window.localStorage.setItem(SOUND_STORAGE_KEY, soundEnabled ? '1' : '0')
   }, [soundEnabled])
 
-  // S4-02: Sync volume to the sound engine
+  // S4-02: Volume always 100% — prevent users from silencing alerts
   useEffect(() => {
-    alertSound.setVolume(volume)
-  }, [volume])
+    alertSound.setVolume(100)
+  }, [])
 
   // S4-02: Sync alarm type to the sound engine
   useEffect(() => {
@@ -359,15 +357,6 @@ function App() {
               </div>
             )}
 
-            <OverlayControls
-              options={overlayOptions}
-              onChange={setOverlayOptions}
-              isMirrored={isMirrored}
-              onMirroredChange={setIsMirrored}
-              soundEnabled={soundEnabled}
-              onSoundEnabledChange={setSoundEnabled}
-            />
-
             <Panel title={t('controlsTitle')}>
               <Stack direction="row" gap={4}>
                 <Button variant="primary" onClick={handleStart} disabled={!connected || isRunning}>
@@ -408,10 +397,14 @@ function App() {
       <SettingsPanel
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
-        volume={volume}
-        onVolumeChange={setVolume}
         alarmType={alarmType}
         onAlarmTypeChange={setAlarmType}
+        options={overlayOptions}
+        onOptionsChange={setOverlayOptions}
+        isMirrored={isMirrored}
+        onMirroredChange={setIsMirrored}
+        soundEnabled={soundEnabled}
+        onSoundEnabledChange={setSoundEnabled}
       />
     </div>
   )
