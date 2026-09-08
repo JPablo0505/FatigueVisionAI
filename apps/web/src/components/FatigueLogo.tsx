@@ -1,10 +1,10 @@
 /**
  * FatigueVisionAI logo (S4-02).
  *
- * Renders the PNG asset from src/assets/logo.png.
- * Replace logo.png with the real brand asset.
+ * Renders the SVG asset from src/assets/logo.svg.
+ * Replace logo.svg with the real brand asset.
  */
-import logoUrl from '../assets/logo.png'
+import logoUrl from '../assets/logo.svg'
 
 interface FatigueLogoProps {
   className?: string

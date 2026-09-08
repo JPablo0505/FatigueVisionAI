@@ -1,9 +1,11 @@
 /**
- * SettingsPanel (S4-02).
+ * SettingsPanel (S4-02, S4-02 fix).
  *
  * Slide-in drawer for user preferences:
  * - Camera device selector
+ * - Alarm type selector (beep / siren / emergency / buzzer)
  * - Alarm volume slider
+ * - Risk cooldown display
  * - Landmark overlay toggles
  * - Model mode display (informational)
  *
@@ -12,15 +14,18 @@
 import { useEffect, useState } from 'react'
 import type { OverlayOptions } from './WebcamFeed'
 import { useLanguage } from '../i18n'
+import { ALARM_TYPES } from '../lib/alertSound'
+import type { AlarmType } from '../lib/alertSound'
 
 /* ---------- localStorage keys ---------- */
 const VOL_KEY = 'fatiguevision.alertVolume'
 const CAM_KEY = 'fatiguevision.cameraDevice'
+const ALARM_KEY = 'fatiguevision.alarmType'
 
 export const ALERT_VOLUME_KEY = VOL_KEY
 export const CAMERA_DEVICE_KEY = CAM_KEY
 
-/* ---------- volume helpers ---------- */
+/* ---------- helpers ---------- */
 export function readAlertVolume(): number {
   if (typeof window === 'undefined') return 80
   const raw = window.localStorage.getItem(VOL_KEY)
@@ -34,6 +39,13 @@ export function readCameraDeviceId(): string {
   return window.localStorage.getItem(CAM_KEY) ?? ''
 }
 
+export function readAlarmType(): AlarmType {
+  if (typeof window === 'undefined') return 'siren'
+  const raw = window.localStorage.getItem(ALARM_KEY)
+  if (raw === 'beep' || raw === 'siren' || raw === 'emergency' || raw === 'buzzer') return raw
+  return 'siren'
+}
+
 /* ---------- props ---------- */
 interface SettingsPanelProps {
   open: boolean
@@ -41,9 +53,21 @@ interface SettingsPanelProps {
   /* volume 0–100 */
   volume: number
   onVolumeChange: (v: number) => void
+  /* alarm type */
+  alarmType: AlarmType
+  onAlarmTypeChange: (t: AlarmType) => void
   /* overlay options (shared with OverlayControls) */
   options: OverlayOptions
   onOptionsChange: (o: OverlayOptions) => void
+}
+
+/* ---------- cooldown config (matches useRiskCooldown) ---------- */
+const COOLDOWN_SECONDS: Record<string, number> = {
+  normal: 0,
+  long_blink: 3,
+  fatigue_warning: 5,
+  microsleep_suspected: 10,
+  critical_microsleep: 15,
 }
 
 /* ---------- component ---------- */
@@ -52,6 +76,8 @@ export function SettingsPanel({
   onClose,
   volume,
   onVolumeChange,
+  alarmType,
+  onAlarmTypeChange,
   options,
   onOptionsChange,
 }: SettingsPanelProps) {
@@ -91,6 +117,12 @@ export function SettingsPanel({
   const handleVolume = (v: number) => {
     onVolumeChange(v)
     window.localStorage.setItem(VOL_KEY, String(v))
+  }
+
+  /* Persist alarm type */
+  const handleAlarmType = (type: AlarmType) => {
+    onAlarmTypeChange(type)
+    window.localStorage.setItem(ALARM_KEY, type)
   }
 
   /* Overlay toggle helper */
@@ -164,6 +196,32 @@ export function SettingsPanel({
             )}
           </section>
 
+          {/* ── Alarm type ── */}
+          <section>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-ebony-clay-400 mb-2">
+              {t('settingsAlarmType')}
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {ALARM_TYPES.map((at) => {
+                const active = alarmType === at.id
+                return (
+                  <button
+                    key={at.id}
+                    type="button"
+                    onClick={() => handleAlarmType(at.id)}
+                    className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                      active
+                        ? 'border-cyan-500 bg-cyan-500/10 text-cyan-400'
+                        : 'border-ebony-clay-700 bg-ebony-clay-800 text-ebony-clay-300 hover:border-ebony-clay-600'
+                    }`}
+                  >
+                    {t(at.labelKey as any)}
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+
           {/* ── Alarm volume ── */}
           <section>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-ebony-clay-400 mb-2">
@@ -181,6 +239,26 @@ export function SettingsPanel({
               />
               <span className="text-xs text-ebony-clay-500">🔊</span>
               <span className="w-8 text-right text-xs tabular-nums text-ebony-clay-300">{volume}%</span>
+            </div>
+          </section>
+
+          {/* ── Risk cooldown ── */}
+          <section>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-ebony-clay-400 mb-2">
+              {t('settingsCooldown')}
+            </h3>
+            <p className="text-xs text-ebony-clay-500 mb-2">{t('settingsCooldownDesc')}</p>
+            <div className="space-y-1">
+              {(['long_blink', 'fatigue_warning', 'microsleep_suspected', 'critical_microsleep'] as const).map((state) => {
+                const sec = COOLDOWN_SECONDS[state]
+                if (sec === 0) return null
+                return (
+                  <div key={state} className="flex items-center justify-between text-xs text-ebony-clay-400">
+                    <span>{t(`risk${state.charAt(0).toUpperCase() + state.slice(1).replace(/_/g, '')}` as any)}</span>
+                    <span className="tabular-nums text-ebony-clay-300">{sec}s</span>
+                  </div>
+                )
+              })}
             </div>
           </section>
 

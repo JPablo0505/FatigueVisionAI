@@ -1,15 +1,25 @@
 import type { RiskState } from '@fatiguevision/contracts'
 
 /**
- * Motor de sonido de alertas con Web Audio API (S1-19).
+ * Motor de sonido de alertas con Web Audio API (S1-19, S4-02).
  *
- * NO usa archivos de audio: genera tonos con osciladores y envolventes de
- * ganancia, siempre respetando la política de autoplay del navegador:
- * el AudioContext se crea de forma perezosa y se reanuda con un gesto de
- * usuario (el click del toggle de sonido). Si el contexto sigue suspendido
- * al momento de reproducir, se intenta reanudar y, si falla, se silencia
- * sin crashear.
+ * Soporta 4 tipos de alarma seleccionables por el usuario:
+ * - beep:    Tono simple y limpio (original).
+ * - siren:   Sirena ascendente/descendente estilo emergency vehicle.
+ * - emergency: Tono harsh estilo EAS (Emergency Alert System).
+ * - buzzer:  Zumbador continuo y penetrante.
+ *
+ * NO usa archivos de audio: todo se genera con osciladores Web Audio.
  */
+
+export type AlarmType = 'beep' | 'siren' | 'emergency' | 'buzzer'
+
+export const ALARM_TYPES: Array<{ id: AlarmType; labelKey: string }> = [
+  { id: 'beep', labelKey: 'alarmBeep' },
+  { id: 'siren', labelKey: 'alarmSiren' },
+  { id: 'emergency', labelKey: 'alarmEmergency' },
+  { id: 'buzzer', labelKey: 'alarmBuzzer' },
+]
 
 /** Handle de un sonido en curso: permite silenciarlo antes de que termine. */
 export interface AlertSoundHandle {
@@ -25,6 +35,8 @@ interface ToneSpec {
   gap: number
   /** Ganancia pico (0..1). */
   gain: number
+  /** Tipo de oscilador (default: sine). */
+  type?: OscillatorType
 }
 
 interface SoundPattern {
@@ -34,14 +46,11 @@ interface SoundPattern {
   repeatMs: number
 }
 
-/**
- * Patrón de sonido por estado de riesgo.
- * - normal / long_blink: sin sonido.
- * - fatigue_warning: 1 beep corto y suave (880 Hz).
- * - microsleep_suspected: 2 beeps más fuertes (988 Hz, con pausa).
- * - critical_microsleep: alarma de tres tonos repetida ~5 s (S4-01: más fuerte y urgente).
- */
-const SOUND_PATTERN: Partial<Record<RiskState, SoundPattern>> = {
+/* ═══════════════════════════════════════════════════════════════════════════
+ * PATRONES POR TIPO DE ALARMA
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+const BEEP_PATTERNS: Partial<Record<RiskState, SoundPattern>> = {
   fatigue_warning: {
     tones: [{ frequency: 880, duration: 0.15, gap: 0, gain: 0.15 }],
     repeatMs: 0,
@@ -63,6 +72,97 @@ const SOUND_PATTERN: Partial<Record<RiskState, SoundPattern>> = {
   },
 }
 
+const SIREN_PATTERNS: Partial<Record<RiskState, SoundPattern>> = {
+  fatigue_warning: {
+    tones: [
+      { frequency: 600, duration: 0.3, gap: 0, gain: 0.2 },
+      { frequency: 900, duration: 0.3, gap: 0, gain: 0.2 },
+    ],
+    repeatMs: 0,
+  },
+  microsleep_suspected: {
+    tones: [
+      { frequency: 500, duration: 0.4, gap: 0, gain: 0.35 },
+      { frequency: 1000, duration: 0.4, gap: 0, gain: 0.35 },
+      { frequency: 500, duration: 0.4, gap: 0, gain: 0.35 },
+    ],
+    repeatMs: 0,
+  },
+  critical_microsleep: {
+    tones: [
+      { frequency: 400, duration: 0.5, gap: 0, gain: 0.5 },
+      { frequency: 1200, duration: 0.5, gap: 0, gain: 0.5 },
+      { frequency: 400, duration: 0.5, gap: 0, gain: 0.5 },
+      { frequency: 1200, duration: 0.5, gap: 0, gain: 0.5 },
+    ],
+    repeatMs: 5_000,
+  },
+}
+
+const EMERGENCY_PATTERNS: Partial<Record<RiskState, SoundPattern>> = {
+  fatigue_warning: {
+    tones: [
+      { frequency: 800, duration: 0.1, gap: 0.05, gain: 0.2, type: 'square' },
+      { frequency: 1000, duration: 0.1, gap: 0.05, gain: 0.2, type: 'square' },
+    ],
+    repeatMs: 0,
+  },
+  microsleep_suspected: {
+    tones: [
+      { frequency: 800, duration: 0.08, gap: 0.04, gain: 0.35, type: 'square' },
+      { frequency: 1000, duration: 0.08, gap: 0.04, gain: 0.35, type: 'square' },
+      { frequency: 800, duration: 0.08, gap: 0.04, gain: 0.35, type: 'square' },
+      { frequency: 1000, duration: 0.08, gap: 0.04, gain: 0.35, type: 'square' },
+    ],
+    repeatMs: 0,
+  },
+  critical_microsleep: {
+    tones: [
+      { frequency: 800, duration: 0.2, gap: 0.05, gain: 0.55, type: 'sawtooth' },
+      { frequency: 1000, duration: 0.2, gap: 0.05, gain: 0.55, type: 'sawtooth' },
+      { frequency: 600, duration: 0.15, gap: 0.05, gain: 0.55, type: 'sawtooth' },
+      { frequency: 1200, duration: 0.15, gap: 0.05, gain: 0.55, type: 'sawtooth' },
+      { frequency: 800, duration: 0.15, gap: 0.4, gain: 0.55, type: 'sawtooth' },
+    ],
+    repeatMs: 5_000,
+  },
+}
+
+const BUZZER_PATTERNS: Partial<Record<RiskState, SoundPattern>> = {
+  fatigue_warning: {
+    tones: [
+      { frequency: 200, duration: 0.3, gap: 0.1, gain: 0.2, type: 'sawtooth' },
+    ],
+    repeatMs: 0,
+  },
+  microsleep_suspected: {
+    tones: [
+      { frequency: 200, duration: 0.4, gap: 0.1, gain: 0.35, type: 'sawtooth' },
+      { frequency: 250, duration: 0.4, gap: 0.1, gain: 0.35, type: 'sawtooth' },
+    ],
+    repeatMs: 0,
+  },
+  critical_microsleep: {
+    tones: [
+      { frequency: 180, duration: 0.8, gap: 0.1, gain: 0.6, type: 'sawtooth' },
+      { frequency: 220, duration: 0.8, gap: 0.1, gain: 0.6, type: 'sawtooth' },
+      { frequency: 180, duration: 0.8, gap: 0.1, gain: 0.6, type: 'sawtooth' },
+    ],
+    repeatMs: 5_000,
+  },
+}
+
+const ALL_PATTERNS: Record<AlarmType, Partial<Record<RiskState, SoundPattern>>> = {
+  beep: BEEP_PATTERNS,
+  siren: SIREN_PATTERNS,
+  emergency: EMERGENCY_PATTERNS,
+  buzzer: BUZZER_PATTERNS,
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * ENGINE
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
 /** Ataque/decaimiento suaves para evitar clics al cortar tonos. */
 const ATTACK_SECONDS = 0.01
 const RELEASE_SECONDS = 0.02
@@ -71,6 +171,7 @@ const LEAD_SECONDS = 0.02
 
 let enabled = true
 let volumePercent = 80
+let alarmType: AlarmType = 'siren'
 let context: AudioContext | null = null
 let activeHandle: AlertSoundHandle | null = null
 
@@ -122,7 +223,7 @@ function scheduleCycle(ctx: AudioContext, pattern: SoundPattern): AlertSoundHand
   for (let r = 0; r < repeats; r++) {
     for (const tone of pattern.tones) {
       const osc = ctx.createOscillator()
-      osc.type = 'sine'
+      osc.type = tone.type ?? 'sine'
       osc.frequency.value = tone.frequency
       const gain = ctx.createGain()
       gain.gain.setValueAtTime(0.0001, cursor)
@@ -167,8 +268,6 @@ export const alertSound = {
     if (!value) {
       stopActive()
     } else {
-      // Crear (si no existe) dentro del gesto del click maximiza la chance de
-      // arrancar el contexto 'running'; si quedó suspendido, reanudarlo.
       const ctx = ensureContext()
       if (ctx !== null) resumeContext()
     }
@@ -179,18 +278,28 @@ export const alertSound = {
     volumePercent = Math.max(0, Math.min(100, percent))
   },
 
+  /** Selecciona el tipo de alarma. */
+  setType(type: AlarmType): void {
+    alarmType = type
+  },
+
+  /** Obtiene el tipo actual. */
+  getType(): AlarmType {
+    return alarmType
+  },
+
   /**
-   * Reproduce el patrón del estado dado. Devuelve un handle para silenciar,
-   * o null si está mutado / no aplica / el contexto no existe.
+   * Reproduce el patrón del estado dado con el tipo de alarma seleccionado.
+   * Devuelve un handle para silenciar, o null si está mutado / no aplica / el contexto no existe.
    */
   play(state: RiskState): AlertSoundHandle | null {
     if (!enabled) return null
-    const pattern = SOUND_PATTERN[state]
+    const patterns = ALL_PATTERNS[alarmType]
+    const pattern = patterns?.[state]
     if (pattern === undefined || pattern.tones.length === 0) return null
     const ctx = ensureContext()
     if (ctx === null) return null
     if (ctx.state === 'suspended') {
-      // Autoplay: intentar desbloquear; si sigue suspendido, fallar en silencio.
       resumeContext()
     }
     stopActive()

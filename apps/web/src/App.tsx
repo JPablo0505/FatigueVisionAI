@@ -23,8 +23,10 @@ import { Panel } from './components/Panel'
 import { MetricRow } from './components/MetricRow'
 import { MetricCell } from './components/MetricCell'
 import { FatigueLogo } from './components/FatigueLogo'
-import { SettingsPanel, readAlertVolume } from './components/SettingsPanel'
+import { SettingsPanel, readAlertVolume, readAlarmType } from './components/SettingsPanel'
 import { alertSound } from './lib/alertSound'
+import type { AlarmType } from './lib/alertSound'
+import { useRiskCooldown } from './hooks/useRiskCooldown'
 import { formatTemplate, useLanguage } from './i18n'
 import type { Lang, TranslationKey } from './i18n'
 import { useFatigueAlert } from './hooks/useFatigueAlert'
@@ -201,11 +203,15 @@ function App() {
   // Sonido de alertas temporales (S1-19): preferencia persistida, se sincroniza
   // con el motor de Web Audio y el toggle de OverlayControls.
   const [soundEnabled, setSoundEnabled] = useState<boolean>(readSoundEnabled)
-  const { alert, dismiss } = useFatigueAlert(assessment, soundEnabled)
+  const { alert, dismiss } = useFatigueAlert(rawAssessment, soundEnabled)
 
-  // S4-02: Settings panel & alarm volume
+  // S4-02: Settings panel & alarm config
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [volume, setVolume] = useState(readAlertVolume)
+  const [alarmType, setAlarmType] = useState<AlarmType>(readAlarmType)
+
+  // S4-02 fix: Risk cooldown — prevents instant recovery after microsleep
+  const { assessment: rawAssessment, isHeld: isRiskHeld, holdRemainingMs } = useRiskCooldown(assessment)
 
   // S4-01: Flash visual rojo cuando el estado es critical_microsleep
   const isCritical = assessment?.state === 'critical_microsleep'
@@ -218,6 +224,11 @@ function App() {
   useEffect(() => {
     alertSound.setVolume(volume)
   }, [volume])
+
+  // S4-02: Sync alarm type to the sound engine
+  useEffect(() => {
+    alertSound.setType(alarmType)
+  }, [alarmType])
 
   const connected = connectionState === 'open'
   const isRunning = visionStatus?.pipeline === 'running'
@@ -387,7 +398,7 @@ function App() {
           </div>
 
           <div className="flex flex-col gap-6">
-            <RiskBanner assessment={assessment} />
+            <RiskBanner assessment={rawAssessment} isHeld={isRiskHeld} holdRemainingMs={holdRemainingMs} />
             <SystemStatusPanel visionStatus={visionStatus} overlay={overlay} fps={overlayFps} />
             <BiometricsPanel assessment={assessment} />
             <FatiguePanel assessment={assessment} />
@@ -402,6 +413,8 @@ function App() {
         onClose={() => setSettingsOpen(false)}
         volume={volume}
         onVolumeChange={setVolume}
+        alarmType={alarmType}
+        onAlarmTypeChange={setAlarmType}
         options={overlayOptions}
         onOptionsChange={setOverlayOptions}
       />
@@ -466,9 +479,11 @@ function SystemStatusPanel({ visionStatus, overlay, fps }: SystemStatusPanelProp
 
 interface RiskBannerProps {
   assessment: FatigueAssessment | null
+  isHeld?: boolean
+  holdRemainingMs?: number
 }
 
-function RiskBanner({ assessment }: RiskBannerProps) {
+function RiskBanner({ assessment, isHeld, holdRemainingMs }: RiskBannerProps) {
   const { t } = useLanguage()
   if (assessment === null) {
     return (
@@ -483,6 +498,9 @@ function RiskBanner({ assessment }: RiskBannerProps) {
     )
   }
   const state = assessment.state ?? 'normal'
+  const holdSeconds = holdRemainingMs !== undefined && holdRemainingMs > 0
+    ? Math.ceil(holdRemainingMs / 1000)
+    : 0
   return (
     <div
       role="status"
@@ -491,7 +509,14 @@ function RiskBanner({ assessment }: RiskBannerProps) {
     >
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-xs font-bold uppercase tracking-wide">{t('riskStateTitle')}</span>
-        <span className="text-sm font-bold">{riskName(t, state)}</span>
+        <div className="flex items-center gap-2">
+          {isHeld && holdSeconds > 0 && (
+            <span className="rounded bg-black/20 px-1.5 py-0.5 text-[10px] font-bold tabular-nums">
+              HOLD {holdSeconds}s
+            </span>
+          )}
+          <span className="text-sm font-bold">{riskName(t, state)}</span>
+        </div>
       </div>
       <p className="mt-2 text-sm font-medium text-slate-900">{riskDescription(t, state)}</p>
     </div>
