@@ -63,6 +63,8 @@ interface WebcamFeedProps {
   isMirrored?: boolean;
   /** Activa el envío de frames al backend (modo camera.source == "browser"). */
   frameProvide?: FrameProvideSink | null;
+  /** S4-01: Pipeline activo — muestra el indicador de grabación en vivo. */
+  isStreaming?: boolean;
 }
 
 const NOSE_INDEX = 4
@@ -544,6 +546,7 @@ export function WebcamFeed({
   state = null,
   isMirrored = false,
   frameProvide = null,
+  isStreaming = false,
 }: WebcamFeedProps) {
   const { t } = useLanguage()
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -629,13 +632,23 @@ export function WebcamFeed({
   return (
     <div
       ref={containerRef}
-      className="relative aspect-[4/3] overflow-hidden rounded-xl border border-slate-800 bg-slate-950"
+      className="relative aspect-[4/3] overflow-hidden rounded-xl border border-ebony-clay-800 bg-ebony-clay-950"
     >
       <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 h-full w-full object-cover" />
       <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 h-full w-full" />
+      {/* S4-01: Live recording indicator — blinking red dot when pipeline is active */}
+      {isStreaming && (
+        <div className="pointer-events-none absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full animate-live-pulse rounded-full bg-red-500 opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+          </span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-red-400">LIVE</span>
+        </div>
+      )}
       {noFace ? (
         <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-center">
-          <span className="rounded-full bg-slate-900/80 px-3 py-1 text-xs font-medium text-slate-300">
+          <span className="rounded-full bg-ebony-clay-900/80 px-3 py-1 text-xs font-medium text-ebony-clay-300">
             {t('noFaceDetected')}
           </span>
         </div>

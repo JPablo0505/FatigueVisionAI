@@ -9,12 +9,12 @@ interface PanelProps {
 
 /** Contenedor de panel oscuro consistente para todas las secciones del dashboard. */
 export function Panel({ title, right, children, className }: PanelProps) {
-  const classes = ['rounded-2xl border border-slate-800 bg-slate-900 p-5', className].filter(Boolean).join(' ')
+  const classes = ['rounded-2xl border border-ebony-clay-800 bg-ebony-clay-900 p-5', className].filter(Boolean).join(' ')
 
   return (
     <section className={classes}>
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">{title}</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-ebony-clay-400">{title}</h2>
         {right !== undefined ? right : null}
       </div>
       {children}

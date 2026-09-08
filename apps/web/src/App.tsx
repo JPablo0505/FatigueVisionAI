@@ -22,6 +22,7 @@ import { FatigueGauge } from './components/FatigueGauge'
 import { Panel } from './components/Panel'
 import { MetricRow } from './components/MetricRow'
 import { MetricCell } from './components/MetricCell'
+import { FatigueLogo } from './components/FatigueLogo'
 import { formatTemplate, useLanguage } from './i18n'
 import type { Lang, TranslationKey } from './i18n'
 import { useFatigueAlert } from './hooks/useFatigueAlert'
@@ -159,7 +160,7 @@ function LanguageSelector() {
     <div
       role="group"
       aria-label={t('languageSelector')}
-      className="flex rounded-lg border border-slate-800 bg-slate-900 p-0.5"
+      className="flex rounded-lg border border-ebony-clay-800 bg-ebony-clay-900 p-0.5"
     >
       {options.map((code) => {
         const active = lang === code
@@ -171,8 +172,8 @@ function LanguageSelector() {
             onClick={() => setLang(code)}
             className={
               active
-                ? 'rounded-md bg-slate-700 px-3 py-1 text-xs font-semibold text-slate-100'
-                : 'rounded-md px-3 py-1 text-xs font-medium text-slate-400 hover:text-slate-200'
+                ? 'rounded-md bg-ebony-clay-700 px-3 py-1 text-xs font-semibold text-ebony-clay-100'
+                : 'rounded-md px-3 py-1 text-xs font-medium text-ebony-clay-400 hover:text-ebony-clay-200'
             }
           >
             {code.toUpperCase()}
@@ -199,6 +200,9 @@ function App() {
   // con el motor de Web Audio y el toggle de OverlayControls.
   const [soundEnabled, setSoundEnabled] = useState<boolean>(readSoundEnabled)
   const { alert, dismiss } = useFatigueAlert(assessment, soundEnabled)
+
+  // S4-01: Flash visual rojo cuando el estado es critical_microsleep
+  const isCritical = assessment?.state === 'critical_microsleep'
 
   useEffect(() => {
     window.localStorage.setItem(SOUND_STORAGE_KEY, soundEnabled ? '1' : '0')
@@ -249,24 +253,34 @@ function App() {
   }
 
   return (
-    <div className="min-h-dvh bg-slate-950 p-6 text-slate-100">
+    <div className="min-h-dvh bg-ebony-clay-950 p-6 text-slate-100">
+      {/* S4-01: Critical alarm — red screen flash overlay */}
+      {isCritical && (
+        <div
+          className="pointer-events-none fixed inset-0 z-[100] bg-red-600 animate-critical-flash"
+          aria-hidden="true"
+        />
+      )}
       <FatigueAlert alert={alert} onDismiss={dismiss} />
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <header className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-50">FatigueVision AI</h1>
-            <p className="mt-1 text-sm text-slate-400">{t('subtitle')}</p>
+        <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-ebony-clay-900 px-6 py-4">
+          <div className="flex items-center gap-3">
+            <FatigueLogo className="h-9 w-9" />
+            <div>
+              <h1 className="text-2xl font-semibold text-ebony-clay-50">FatigueVision AI</h1>
+              <p className="mt-0.5 text-sm text-ebony-clay-400">{t('subtitle')}</p>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <LanguageSelector />
             <Badge tone="info" ariaLabel={t('protocolBadge')}>
               {formatTemplate(t('protocolText'), { v: PROTOCOL_VERSION })}
             </Badge>
-            <StatusIndicator status={connection.dot} label={connection.label} className="[&_span]:text-slate-200" />
+            <StatusIndicator status={connection.dot} label={connection.label} className="[&_span]:text-ebony-clay-200" />
             <StatusIndicator
               status={pipeline === null ? 'idle' : pipeline.dot}
               label={`${t('pipeline')}: ${pipelineLabel}`}
-              className="[&_span]:text-slate-200"
+              className="[&_span]:text-ebony-clay-200"
             />
             <Badge tone="neutral" ariaLabel={t('lastUpdate')}>
               {lastPongAt !== null
@@ -299,7 +313,7 @@ function App() {
             {stream === null ? (
               <CameraPlaceholder error={cameraError} />
             ) : (
-              <div className="rounded-2xl border border-slate-800 bg-slate-900 p-3">
+              <div className="rounded-2xl border border-ebony-clay-800 bg-ebony-clay-900 p-3">
                 <WebcamFeed
                   stream={stream}
                   overlay={overlay}
@@ -310,6 +324,7 @@ function App() {
                   state={overlayState}
                   isMirrored={isMirrored}
                   frameProvide={frameProvide}
+                  isStreaming={isRunning}
                 />
               </div>
             )}
@@ -335,11 +350,11 @@ function App() {
                   {t('ping')}
                 </Button>
               </Stack>
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-800 pt-4 text-sm text-slate-400">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-ebony-clay-800 pt-4 text-sm text-ebony-clay-400">
                 <StatusIndicator
                   status={pipeline === null ? 'idle' : pipeline.dot}
                   label={`${t('pipeline')}: ${pipelineLabel}`}
-                  className="[&_span]:text-slate-300"
+                  className="[&_span]:text-ebony-clay-300"
                 />
                 <span>
                   {t('pingKeepAlive')}
@@ -370,9 +385,9 @@ function CameraPlaceholder({ error }: CameraPlaceholderProps) {
   const { t } = useLanguage()
   const message = error ?? t('cameraPlaceholderHint')
   return (
-    <div className="flex aspect-[4/3] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-700 bg-slate-900 p-6 text-center">
-      <span className="text-sm font-semibold text-slate-200">{t('cameraUnavailable')}</span>
-      <p className="max-w-sm text-sm text-slate-400">{message}</p>
+    <div className="flex aspect-[4/3] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-ebony-clay-700 bg-ebony-clay-900 p-6 text-center">
+      <span className="text-sm font-semibold text-ebony-clay-200">{t('cameraUnavailable')}</span>
+      <p className="max-w-sm text-sm text-ebony-clay-400">{message}</p>
     </div>
   )
 }
@@ -393,12 +408,12 @@ function SystemStatusPanel({ visionStatus, overlay, fps }: SystemStatusPanelProp
       title={t('systemStatusTitle')}
       right={
         pipeline === null ? null : (
-          <StatusIndicator status={pipeline.dot} label={pipeline.label} className="[&_span]:text-slate-200" />
+          <StatusIndicator status={pipeline.dot} label={pipeline.label} className="[&_span]:text-ebony-clay-200" />
         )
       }
     >
       {visionStatus === null ? (
-        <Loading label={t('waitingPipelineStatus')} className="[&_span]:text-slate-300" />
+        <Loading label={t('waitingPipelineStatus')} className="[&_span]:text-ebony-clay-300" />
       ) : (
         <dl className="flex flex-col gap-3">
           <MetricRow
@@ -428,10 +443,10 @@ function RiskBanner({ assessment }: RiskBannerProps) {
       <div
         role="status"
         aria-label={t('riskStateAria')}
-        className="rounded-2xl border border-slate-800 bg-slate-900 p-4"
+        className="rounded-2xl border border-ebony-clay-800 bg-ebony-clay-900 p-4"
       >
-        <span className="text-xs font-bold uppercase tracking-wide text-slate-400">{t('riskStateTitle')}</span>
-        <p className="mt-2 text-sm text-slate-400">{t('waitingAssessment')}</p>
+        <span className="text-xs font-bold uppercase tracking-wide text-ebony-clay-400">{t('riskStateTitle')}</span>
+        <p className="mt-2 text-sm text-ebony-clay-400">{t('waitingAssessment')}</p>
       </div>
     )
   }
@@ -440,7 +455,7 @@ function RiskBanner({ assessment }: RiskBannerProps) {
     <div
       role="status"
       aria-label={t('riskStateAria')}
-      className={`rounded-2xl border border-slate-800 p-4 text-slate-950 ${RISK_COLOR[state]}`}
+      className={`rounded-2xl border border-ebony-clay-800 p-4 text-slate-950 ${RISK_COLOR[state]}`}
     >
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-xs font-bold uppercase tracking-wide">{t('riskStateTitle')}</span>
@@ -460,7 +475,7 @@ function RecentEventsPanel({ events }: RecentEventsPanelProps) {
   return (
     <Panel title={t('recentEventsTitle')}>
       {events.length === 0 ? (
-        <p className="text-sm text-slate-500">{t('emptyEvents')}</p>
+        <p className="text-sm text-ebony-clay-500">{t('emptyEvents')}</p>
       ) : (
         <ul className="flex flex-col gap-2.5">
           {[...events]
@@ -472,7 +487,7 @@ function RecentEventsPanel({ events }: RecentEventsPanelProps) {
                   <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${EVENT_COLOR[event.type]}`} />
                   {eventName(t, event.type)}
                 </span>
-                <span className="tabular-nums text-slate-400">
+                <span className="tabular-nums text-ebony-clay-400">
                   {fmt(event.duration_seconds, 2)}s · {formatEpochSeconds(event.timestamp)}
                 </span>
               </li>
@@ -495,7 +510,7 @@ function BiometricsPanel({ assessment }: BiometricsPanelProps) {
   return (
     <Panel title={t('biometricsTitle')}>
       {assessment === null ? (
-        <Loading label={t('waitingAssessment')} className="[&_span]:text-slate-300" />
+        <Loading label={t('waitingAssessment')} className="[&_span]:text-ebony-clay-300" />
       ) : (
         <>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-5">
@@ -583,13 +598,13 @@ function BiometricsPanel({ assessment }: BiometricsPanelProps) {
             />
           </dl>
           {features === undefined ? (
-            <p className="mt-4 text-xs text-slate-500">{t('featuresMissing')}</p>
+            <p className="mt-4 text-xs text-ebony-clay-500">{t('featuresMissing')}</p>
           ) : null}
-          <div className="mt-4 border-t border-slate-800 pt-3">
-            <dl className="flex flex-col gap-2 text-xs text-slate-400">
+          <div className="mt-4 border-t border-ebony-clay-800 pt-3">
+            <dl className="flex flex-col gap-2 text-xs text-ebony-clay-400">
               <div className="flex items-center justify-between gap-2">
                 <dt>{t('headPoseLabel')}</dt>
-                <dd className="tabular-nums text-slate-300">
+                <dd className="tabular-nums text-ebony-clay-300">
                   {features === undefined
                     ? t('na')
                     : `${fmt(features.head_pose.yaw, 1)}° ${fmt(features.head_pose.pitch, 1)}° ${fmt(features.head_pose.roll, 1)}°`}
@@ -597,7 +612,7 @@ function BiometricsPanel({ assessment }: BiometricsPanelProps) {
               </div>
               <div className="flex items-center justify-between gap-2">
                 <dt>{t('irisDirectionLabel')}</dt>
-                <dd className="tabular-nums text-slate-300">
+                <dd className="tabular-nums text-ebony-clay-300">
                   {features === undefined
                     ? t('na')
                     : `x ${fmt(features.iris_direction.x, 2)} · y ${fmt(features.iris_direction.y, 2)}`}
@@ -620,11 +635,11 @@ function FatiguePanel({ assessment }: FatiguePanelProps) {
   return (
     <Panel title={t('fatigueTitle')}>
       {assessment === null ? (
-        <Loading label={t('waitingFatigue')} className="[&_span]:text-slate-300" />
+        <Loading label={t('waitingFatigue')} className="[&_span]:text-ebony-clay-300" />
       ) : (
         <>
           <FatigueGauge score={assessment.score} level={assessment.level} />
-          <div className="mt-5 flex items-center justify-between border-t border-slate-800 pt-4">
+          <div className="mt-5 flex items-center justify-between border-t border-ebony-clay-800 pt-4">
             <Badge tone={LEVEL_TONE[assessment.level]} ariaLabel={t('fatigueLevelAria')}>
               {formatTemplate(t('levelLabel'), { l: levelName(t, assessment.level) })}
             </Badge>

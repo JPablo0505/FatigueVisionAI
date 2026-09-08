@@ -39,7 +39,7 @@ interface SoundPattern {
  * - normal / long_blink: sin sonido.
  * - fatigue_warning: 1 beep corto y suave (880 Hz).
  * - microsleep_suspected: 2 beeps más fuertes (988 Hz, con pausa).
- * - critical_microsleep: alarma de dos tonos repetida ~4 s.
+ * - critical_microsleep: alarma de tres tonos repetida ~5 s (S4-01: más fuerte y urgente).
  */
 const SOUND_PATTERN: Partial<Record<RiskState, SoundPattern>> = {
   fatigue_warning: {
@@ -55,10 +55,11 @@ const SOUND_PATTERN: Partial<Record<RiskState, SoundPattern>> = {
   },
   critical_microsleep: {
     tones: [
-      { frequency: 660, duration: 0.15, gap: 0.1, gain: 0.3 },
-      { frequency: 880, duration: 0.15, gap: 0.1, gain: 0.3 },
+      { frequency: 880, duration: 0.12, gap: 0.08, gain: 0.45 },
+      { frequency: 1100, duration: 0.12, gap: 0.08, gain: 0.5 },
+      { frequency: 880, duration: 0.12, gap: 0.3, gain: 0.45 },
     ],
-    repeatMs: 4_000,
+    repeatMs: 5_000,
   },
 }
 

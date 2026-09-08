@@ -49,7 +49,7 @@ export function OverlayControls({
   return (
     <Panel title={t('overlayControlsTitle')}>
       <Stack direction="column" gap={2}>
-        <label className="flex cursor-pointer items-center justify-between gap-3 text-sm text-slate-300">
+        <label className="flex cursor-pointer items-center justify-between gap-3 text-sm text-ebony-clay-300">
           <span>{t('overlayMirror')}</span>
           <input
             type="checkbox"
@@ -58,7 +58,7 @@ export function OverlayControls({
             className="h-4 w-4 accent-cyan-500"
           />
         </label>
-        <label className="flex cursor-pointer items-center justify-between gap-3 text-sm text-slate-300">
+        <label className="flex cursor-pointer items-center justify-between gap-3 text-sm text-ebony-clay-300">
           <span>{t('alertSound')}</span>
           <input
             type="checkbox"
@@ -70,7 +70,7 @@ export function OverlayControls({
         {OPTION_LABELS.map(({ key, label }) => (
           <label
             key={key}
-            className="flex cursor-pointer items-center justify-between gap-3 text-sm text-slate-300"
+            className="flex cursor-pointer items-center justify-between gap-3 text-sm text-ebony-clay-300"
           >
             <span>{t(label)}</span>
             <input

@@ -4,11 +4,45 @@
    (relativo a este arcivo: ../../../packages/ui/src). */
 @source "../../../packages/ui/src";
 
+/* ── Ebony-clay palette (S4-01) ─────────────────────────────────────────── */
+@theme {
+  --color-ebony-clay-50: #f6f7f9;
+  --color-ebony-clay-100: #eceef2;
+  --color-ebony-clay-200: #d5d8e2;
+  --color-ebony-clay-300: #b0b6c9;
+  --color-ebony-clay-400: #8590ab;
+  --color-ebony-clay-500: #667391;
+  --color-ebony-clay-600: #515b78;
+  --color-ebony-clay-700: #434a62;
+  --color-ebony-clay-800: #3a4053;
+  --color-ebony-clay-900: #2d3240;
+  --color-ebony-clay-950: #1a1d27;
+}
+
+/* ── Critical alarm flash animation (S4-01) ─────────────────────────────── */
+@keyframes critical-flash {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.18; }
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.animate-critical-flash {
+  animation: critical-flash 0.8s ease-in-out infinite;
+}
+
+.animate-live-pulse {
+  animation: live-pulse 1.5s ease-in-out infinite;
+}
+
 :root {
   color-scheme: dark;
 }
 
 body {
   margin: 0;
-  background-color: rgb(2 6 23);
+  background-color: rgb(26 29 39);
 }

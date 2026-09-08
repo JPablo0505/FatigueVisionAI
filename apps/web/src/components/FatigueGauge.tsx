@@ -19,10 +19,10 @@ export function FatigueGauge({ score, level }: FatigueGaugeProps) {
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between">
-        <span className="text-xs uppercase tracking-wide text-slate-400">{t('fatigueScore')}</span>
-        <span className="text-sm font-semibold tabular-nums text-slate-100">{score.toFixed(1)} / 100</span>
+        <span className="text-xs uppercase tracking-wide text-ebony-clay-400">{t('fatigueScore')}</span>
+        <span className="text-sm font-semibold tabular-nums text-ebony-clay-100">{score.toFixed(1)} / 100</span>
       </div>
-      <div className="h-3 w-full overflow-hidden rounded-full bg-slate-800">
+      <div className="h-3 w-full overflow-hidden rounded-full bg-ebony-clay-800">
         <div
           role="progressbar"
           aria-label={t('fatigueScoreAria')}

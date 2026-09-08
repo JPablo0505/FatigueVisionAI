@@ -114,7 +114,7 @@ export function FatigueAlert({ alert, onDismiss }: FatigueAlertProps) {
   return (
     <div
       role="alert"
-      className={`pointer-events-none fixed right-4 top-4 z-50 w-96 max-w-[calc(100vw-2rem)] rounded-2xl border-2 border-slate-900/20 p-4 text-slate-950 shadow-2xl transition-all duration-[400ms] ease-in-out ${
+      className={`pointer-events-none fixed right-4 top-4 z-50 w-96 max-w-[calc(100vw-2rem)] rounded-2xl border-2 border-ebony-clay-900/20 p-4 text-ebony-clay-950 shadow-2xl transition-all duration-[400ms] ease-in-out ${
         visible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
       }`}
       style={{ backgroundColor: style.color }}
@@ -131,7 +131,7 @@ export function FatigueAlert({ alert, onDismiss }: FatigueAlertProps) {
           type="button"
           onClick={onDismiss}
           aria-label={t('alertDismiss')}
-          className="pointer-events-auto -m-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-900/70 transition-colors hover:bg-slate-900/10 hover:text-slate-950"
+          className="pointer-events-auto -m-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ebony-clay-900/70 transition-colors hover:bg-ebony-clay-900/10 hover:text-ebony-clay-950"
         >
           <span aria-hidden>✕</span>
         </button>
